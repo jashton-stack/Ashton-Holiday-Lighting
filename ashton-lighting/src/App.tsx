@@ -200,6 +200,7 @@ function useFadeIn(): void {
 // ─── Main App ─────────────────────────────────────────────────────────────────
 
 export default function App(): JSX.Element {
+  const [menuOpen, setMenuOpen] = useState(false)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const [formState, setFormState] = useState({ first: '', last: '', email: '', phone: '', interest: 'Permanent Holiday Lights (Govee)', message: '' })
   const [formStatus, setFormStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle')
@@ -207,7 +208,7 @@ export default function App(): JSX.Element {
 
   useFadeIn()
 
-  const scrollTo = (id: string): void => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+  const scrollTo = (id: string): void => { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }); setMenuOpen(false) }
 
   const handleToggleFaq = (i: number): void => setOpenFaq(openFaq === i ? null : i)
 
@@ -247,7 +248,7 @@ export default function App(): JSX.Element {
       }
     } catch {
       setFormStatus('error')
-      setFormError("Something went wrong — please call us directly at (402) 000-0000.")
+      setFormError("Something went wrong — please call us directly at (402) 889-8640.")
     }
   }
 
@@ -261,7 +262,7 @@ export default function App(): JSX.Element {
           Ashton Holiday Lighting
           <span style={styles.navSubtitle}>Omaha, Nebraska</span>
         </div>
-        <ul style={styles.navLinks}>
+        <ul style={styles.navLinks} className="desktop-nav-links">
           {(['about', 'gallery', 'faq', 'booking'] as const).map(id => (
             <li key={id}>
               <a style={styles.navLink} onClick={() => scrollTo(id)}>
@@ -270,10 +271,21 @@ export default function App(): JSX.Element {
             </li>
           ))}
         </ul>
-        <button style={styles.navCta} className="nav-cta" onClick={() => scrollTo('booking')}>
+        <button style={styles.navCta} className="nav-cta desktop-nav-cta" onClick={() => scrollTo('booking')}>
           Book Free Consult
         </button>
+        <button className={`hamburger${menuOpen ? ' open' : ''}`} onClick={() => setMenuOpen(o => !o)} aria-label="Menu">
+          <span /><span /><span />
+        </button>
       </nav>
+      <div className={`mobile-menu${menuOpen ? ' open' : ''}`}>
+        {(['about', 'gallery', 'faq', 'booking'] as const).map(id => (
+          <a key={id} onClick={() => scrollTo(id)}>
+            {id === 'booking' ? 'Contact' : id.charAt(0).toUpperCase() + id.slice(1)}
+          </a>
+        ))}
+        <button className="mobile-cta btn-p" onClick={() => scrollTo('booking')}>Book Free Consult</button>
+      </div>
 
       {/* HERO */}
       <section style={styles.hero}>
@@ -302,7 +314,7 @@ export default function App(): JSX.Element {
 
       {/* ABOUT */}
       <section id="about" style={{ ...styles.section, background: '#040f22' }}>
-        <div className="fi" style={styles.aboutGrid}>
+        <div className="fi" style={styles.aboutGrid} className="about-grid">
           <div>
             <p style={styles.sLabel}>What We Do</p>
             <h2 style={styles.sh2}>Permanent Lights.<br /><em style={{ color: '#ffd166', fontStyle: 'normal' }}>Zero Hassle.</em></h2>
@@ -328,7 +340,7 @@ export default function App(): JSX.Element {
               ))}
             </ul>
           </div>
-          <div style={{ ...styles.aboutVis, backgroundImage: "url('/images/IMG_7323.jpeg')", backgroundSize: 'cover', backgroundPosition: 'center' }}>
+          <div className="about-photo" style={{ ...styles.aboutVis, backgroundImage: "url('/images/IMG_7323.jpeg')", backgroundSize: 'cover', backgroundPosition: 'center' }}>
             <div style={{ position: 'absolute', inset: 0, background: 'rgba(2,11,24,0.18)', borderRadius: 8 }} />
           </div>
         </div>
@@ -341,7 +353,7 @@ export default function App(): JSX.Element {
           <h2 style={{ ...styles.sh2, textAlign: 'center' }}>Why <em style={{ color: '#ffd166', fontStyle: 'normal' }}>Govee</em> Permanent Lights?</h2>
           <p style={{ ...styles.sLead, margin: '0 auto', textAlign: 'center' }}>Govee is the industry leader in smart permanent outdoor lighting — and we're Omaha's trusted installer.</p>
         </div>
-        <div className="fi" style={styles.goveeCards}>
+        <div className="fi" style={styles.goveeCards} className="govee-cards-grid">
           {GOVEE_CARDS.map(card => (
             <div key={card.num} style={styles.goveeCard} className="govee-card">
               <div style={styles.cardNum}>{card.num}</div>
@@ -360,7 +372,7 @@ export default function App(): JSX.Element {
             <h2 style={styles.sh2}>Omaha Homes, <em style={{ color: '#ffd166', fontStyle: 'normal' }}>Transformed</em></h2>
             <p style={styles.sLead}>Every install is custom-planned to complement your home's roofline and architecture.</p>
           </div>
-          <div className="fi" style={styles.galleryGrid}>
+          <div className="fi" style={styles.galleryGrid} className="gallery-grid-inner">
             {GALLERY_ITEMS.map((item, i) => (
               <div
                 key={i}
@@ -409,7 +421,7 @@ export default function App(): JSX.Element {
               We'll visit your home, measure your roofline, and give you a no-obligation quote — all for free. Most installs are done in half a day.
             </p>
           </div>
-          <div className="fi" style={styles.bookingGrid}>
+          <div className="fi" style={styles.bookingGrid} className="booking-grid-inner">
 
             {/* PRIMARY: GHL Calendar */}
             <div style={styles.bookingCard}>
@@ -444,7 +456,7 @@ export default function App(): JSX.Element {
                 </div>
               ) : (
                 <>
-                  <div style={styles.formRow}>
+                  <div style={styles.formRow} className="form-row-inner">
                     <div style={styles.fg}><label style={styles.fgLabel}>First Name</label><input style={styles.fgInput} type="text" placeholder="John" value={formState.first} onChange={e => setFormState(s => ({ ...s, first: e.target.value }))} /></div>
                     <div style={styles.fg}><label style={styles.fgLabel}>Last Name</label><input style={styles.fgInput} type="text" placeholder="Smith" value={formState.last} onChange={e => setFormState(s => ({ ...s, last: e.target.value }))} /></div>
                   </div>
@@ -475,7 +487,7 @@ export default function App(): JSX.Element {
       {/* FOOTER */}
       <footer style={styles.footer}>
         <div style={{ maxWidth: 1080, margin: '0 auto' }}>
-          <div style={styles.footerTop}>
+          <div style={styles.footerTop} className="footer-top-inner">
             <div>
               <div style={styles.footerLogo}>Ashton Holiday Lighting</div>
               <p style={styles.footerTagline}>Omaha's trusted installer for Govee permanent outdoor lighting. One install. Endless seasons.</p>
@@ -491,13 +503,12 @@ export default function App(): JSX.Element {
             <div>
               <h4 style={styles.footerColHead}>Contact</h4>
               <ul style={styles.footerList}>
-                <li><a style={styles.footerLink}>Omaha, Elkhorn, Belvue, Bennington, Gretna, and Papillion</a></li>
                 <li><a style={styles.footerLink} href="tel:4028898640">(402) 889-8640</a></li>
                 <li><a style={styles.footerLink} href="mailto:josiah.ashton@gmail.com">josiah.ashton@gmail.com</a></li>
               </ul>
             </div>
           </div>
-          <div style={styles.footerBottom}>
+          <div style={styles.footerBottom} className="footer-bottom-inner">
             <p style={{ fontSize: '0.78rem', color: '#7a9bbf' }}>© 2025 Ashton Holiday Lighting · Omaha, NE · All rights reserved</p>
             <p style={{ fontSize: '0.72rem', color: 'rgba(120,150,180,0.42)' }}>Powered by Ashton AI Solutions</p>
           </div>
@@ -506,8 +517,8 @@ export default function App(): JSX.Element {
 
       {/* SALE BANNER */}
       <div style={styles.saleBanner}>
-        <span style={styles.bannerTag}>March Sale</span>
-        <p style={styles.bannerText}><strong style={{ color: '#ffe066' }}>50% OFF Installation</strong> — Limited time. Book your free consult and lock in the discount.</p>
+        <span style={styles.bannerTag} className="banner-tag-el">March Sale</span>
+        <p style={styles.bannerText} className="banner-text-el"><strong style={{ color: '#ffe066' }}>50% OFF Installation</strong> — Limited time. Book your free consult and lock in the discount.</p>
         <button style={styles.bannerCta} className="banner-cta" onClick={() => scrollTo('booking')}>Claim Offer</button>
       </div>
     </>
@@ -604,4 +615,44 @@ const CSS = `
   .gallery-item:hover { border-color: rgba(255,209,102,0.38) !important; }
   .gallery-item:hover .gallery-overlay { opacity: 1 !important; }
   .booking-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,#00d4ff,#ffd166); }
+
+  /* Hamburger — hidden on desktop */
+  .hamburger { display: none; flex-direction: column; gap: 5px; background: none; border: none; cursor: pointer; padding: 4px; z-index: 110; }
+  .hamburger span { display: block; width: 24px; height: 2px; background: #e8f1ff; border-radius: 2px; transition: all 0.28s; }
+  .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .hamburger.open span:nth-child(2) { opacity: 0; }
+  .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  /* Mobile nav drawer */
+  .mobile-menu { display: none; position: fixed; top: 68px; left: 0; right: 0; background: rgba(2,11,24,0.98); backdrop-filter: blur(16px); border-bottom: 1px solid rgba(0,180,255,0.12); flex-direction: column; padding: 24px 28px 32px; z-index: 99; }
+  .mobile-menu.open { display: flex; }
+  .mobile-menu a { color: #e8f1ff; font-family: 'Raleway', sans-serif; font-size: 1.05rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; padding: 14px 0; border-bottom: 1px solid rgba(0,180,255,0.08); cursor: pointer; text-decoration: none; display: block; }
+  .mobile-menu a:last-of-type { border-bottom: none; }
+  .mobile-cta { margin-top: 20px; background: linear-gradient(135deg,#00d4ff,#0090c0) !important; color: #020b18 !important; border: none !important; padding: 14px !important; border-radius: 4px; font-family: 'Raleway', sans-serif; font-size: 0.95rem; font-weight: 700 !important; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; width: 100%; }
+
+  @media (max-width: 768px) {
+    .hamburger { display: flex !important; }
+    .desktop-nav-links { display: none !important; }
+    .desktop-nav-cta { display: none !important; }
+
+    section { padding: 60px 20px !important; }
+
+    .about-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
+    .about-photo { order: -1; aspect-ratio: 16/9 !important; }
+
+    .govee-cards-grid { grid-template-columns: 1fr !important; }
+
+    .gallery-grid-inner { grid-template-columns: 1fr !important; }
+    .gallery-grid-inner > div { grid-column: span 1 !important; }
+
+    .booking-grid-inner { grid-template-columns: 1fr !important; gap: 32px !important; }
+    .form-row-inner { grid-template-columns: 1fr !important; }
+
+    .footer-top-inner { grid-template-columns: 1fr !important; gap: 24px !important; }
+    .footer-bottom-inner { flex-direction: column !important; gap: 6px !important; text-align: center; }
+
+    .sale-banner-inner { gap: 8px !important; padding: 0 12px; flex-wrap: nowrap; }
+    .banner-tag-el { display: none !important; }
+    .banner-text-el { font-size: 0.75rem !important; }
+  }
 `
