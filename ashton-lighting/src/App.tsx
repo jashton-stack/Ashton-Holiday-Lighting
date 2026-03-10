@@ -85,7 +85,7 @@ const GOVEE_CARDS: GoveeCard[] = [
 
 const GALLERY_ITEMS: GalleryItem[] = [
   { src: '/images/IMG_7323.jpeg', span: true },
-  { src: '/images/IMG_7323.jpeg' },
+  { src: '/images/IMG_6879.jpeg' },
   { src: '/images/IMG_6792.jpeg' },
   { src: '/images/IMG_6807.jpeg' },
   { src: '/images/IMG_6874.jpeg' },
