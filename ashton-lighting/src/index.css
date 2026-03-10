@@ -1,0 +1,9 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: #020b18;
+  color: #e8f1ff;
+  font-family: 'Source Sans 3', sans-serif;
+  overflow-x: hidden;
+  padding-bottom: 54px;
+}
