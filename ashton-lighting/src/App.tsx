@@ -491,9 +491,9 @@ export default function App(): JSX.Element {
             <div>
               <h4 style={styles.footerColHead}>Contact</h4>
               <ul style={styles.footerList}>
-                <li><a style={styles.footerLink}>Omaha, Nebraska</a></li>
-                <li><a style={styles.footerLink} href="tel:4020000000">(402) 000-0000</a></li>
-                <li><a style={styles.footerLink} href="mailto:info@ashtonholidaylighting.com">info@ashtonholidaylighting.com</a></li>
+                <li><a style={styles.footerLink}>Omaha, Elkhorn, Belvue, Bennington, Gretna, and Papillion</a></li>
+                <li><a style={styles.footerLink} href="tel:4028898640">(402) 889-8640</a></li>
+                <li><a style={styles.footerLink} href="mailto:josiah.ashton@gmail.com">josiah.ashton@gmail.com</a></li>
               </ul>
             </div>
           </div>
