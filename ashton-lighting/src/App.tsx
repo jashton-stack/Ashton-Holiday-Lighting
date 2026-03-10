@@ -314,7 +314,7 @@ export default function App(): JSX.Element {
 
       {/* ABOUT */}
       <section id="about" style={{ ...styles.section, background: '#040f22' }}>
-        <div className="fi" style={styles.aboutGrid} className="about-grid">
+        <div className="fi about-grid" style={styles.aboutGrid}>
           <div>
             <p style={styles.sLabel}>What We Do</p>
             <h2 style={styles.sh2}>Permanent Lights.<br /><em style={{ color: '#ffd166', fontStyle: 'normal' }}>Zero Hassle.</em></h2>
@@ -353,7 +353,7 @@ export default function App(): JSX.Element {
           <h2 style={{ ...styles.sh2, textAlign: 'center' }}>Why <em style={{ color: '#ffd166', fontStyle: 'normal' }}>Govee</em> Permanent Lights?</h2>
           <p style={{ ...styles.sLead, margin: '0 auto', textAlign: 'center' }}>Govee is the industry leader in smart permanent outdoor lighting — and we're Omaha's trusted installer.</p>
         </div>
-        <div className="fi" style={styles.goveeCards} className="govee-cards-grid">
+        <div className="fi govee-cards-grid" style={styles.goveeCards}>
           {GOVEE_CARDS.map(card => (
             <div key={card.num} style={styles.goveeCard} className="govee-card">
               <div style={styles.cardNum}>{card.num}</div>
@@ -372,7 +372,7 @@ export default function App(): JSX.Element {
             <h2 style={styles.sh2}>Omaha Homes, <em style={{ color: '#ffd166', fontStyle: 'normal' }}>Transformed</em></h2>
             <p style={styles.sLead}>Every install is custom-planned to complement your home's roofline and architecture.</p>
           </div>
-          <div className="fi" style={styles.galleryGrid} className="gallery-grid-inner">
+          <div className="fi gallery-grid-inner" style={styles.galleryGrid}>
             {GALLERY_ITEMS.map((item, i) => (
               <div
                 key={i}
@@ -421,7 +421,7 @@ export default function App(): JSX.Element {
               We'll visit your home, measure your roofline, and give you a no-obligation quote — all for free. Most installs are done in half a day.
             </p>
           </div>
-          <div className="fi" style={styles.bookingGrid} className="booking-grid-inner">
+          <div className="fi booking-grid-inner" style={styles.bookingGrid}>
 
             {/* PRIMARY: GHL Calendar */}
             <div style={styles.bookingCard}>
