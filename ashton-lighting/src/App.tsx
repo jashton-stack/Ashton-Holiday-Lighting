@@ -18,21 +18,9 @@ interface GalleryItem {
   span?: boolean
 }
 
-interface ContactPayload {
-  locationId: string
-  firstName: string
-  lastName: string
-  email: string
-  phone: string
-  source: string
-  tags: string[]
-}
-
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const GHL_LOCATION_ID = 'tlHhUo40JX0SwVD1xPZ2'
 const GHL_CALENDAR_ID = 'JbBRO1y5H5DWd8qcOstJ'
-const GHL_API_KEY     = 'pit-0bef9f8d-3517-4695-b692-48e2994921b6'
 
 const BULB_COLORS: string[] = [
   '#ff6b6b', '#ffd166', '#06d6a0', '#00d4ff',
@@ -220,35 +208,28 @@ export default function App(): JSX.Element {
     setFormError('')
     setFormStatus('sending')
 
-    const payload: ContactPayload = {
-      locationId: GHL_LOCATION_ID,
-      firstName: formState.first,
-      lastName: formState.last,
-      email: formState.email,
-      phone: formState.phone,
-      source: 'Website Contact Form',
-      tags: ['website-lead'],
-    }
-
     try {
-      const res = await fetch('https://services.leadconnectorhq.com/contacts/', {
+      const res = await fetch('/.netlify/functions/contact', {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${GHL_API_KEY}`,
-          Version: '2021-07-28',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName: formState.first,
+          lastName:  formState.last,
+          email:     formState.email,
+          phone:     formState.phone,
+          interest:  formState.interest,
+          message:   formState.message,
+        }),
       })
 
-      if (res.ok || res.status === 200 || res.status === 201) {
+      if (res.ok) {
         setFormStatus('success')
       } else {
         throw new Error(`Status ${res.status}`)
       }
     } catch {
       setFormStatus('error')
-      setFormError("Something went wrong — please call us directly at (402) 889-8640.")
+      setFormError('Something went wrong — please call us directly at (402) 889-8640.')
     }
   }
 
