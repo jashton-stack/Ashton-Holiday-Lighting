@@ -1,947 +1,857 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+//  Types 
+
 interface FaqItem { q: string; a: string }
-interface PricingTier { tier: string; price: string; desc: string; features: string[]; featured?: boolean }
+interface GoveeCard { title: string; body: string }
+interface PricingTier { name: string; startingAt: string; desc: string; features: string[]; featured?: boolean }
+interface ProcessStep { num: string; title: string; desc: string }
 
-// ─── Data ─────────────────────────────────────────────────────────────────────
+//  Constants 
+
+const GHL_CALENDAR_ID = 'JbBRO1y5H5DWd8qcOstJ'
+
+const BULB_COLORS = [
+  '#ff6b6b','#ffd166','#06d6a0','#00d4ff','#ff9a3c',
+  '#c084fc','#ffd166','#ff6b6b','#00d4ff','#06d6a0',
+]
+
 const FAQS: FaqItem[] = [
-  { q: 'What areas do you serve?', a: 'We serve Omaha, Nebraska and the surrounding metro area including Papillion, Bellevue, La Vista, Elkhorn, Gretna, and Council Bluffs. Reach out if you are outside these areas — we may still be able to accommodate.' },
-  { q: 'How long does installation take?', a: 'Most residential installations are completed in half a day or less. Larger properties or complex rooflines may take a full day. We work efficiently and leave your property completely clean.' },
-  { q: 'Do I need to provide anything?', a: 'No. We bring all lights, hardware, extension cords, and tools. All you need is a standard outdoor electrical outlet. We handle everything from start to finish.' },
-  { q: 'What kind of lights do you use?', a: 'We use commercial-grade Govee permanent LED lights that produce over 16 million colors. They are weather-resistant, energy-efficient, and controlled via the Govee Home app on your smartphone.' },
-  { q: 'Are the lights permanent?', a: 'Yes. The lights are installed once and stay on your home year-round. The mounting hardware is discrete and weather-sealed. You simply turn them on and off via the app whenever you want.' },
-  { q: 'How much does it cost?', a: 'Pricing starts at $1,000 for smaller homes and scales based on linear footage. We offer transparent flat-rate pricing with no hidden fees. Request a free consultation for an exact quote.' },
-  { q: 'Is there a warranty?', a: 'Yes. We stand behind our work with a satisfaction guarantee on installation, and the Govee lights carry a manufacturer warranty. If anything fails due to our installation, we will fix it at no charge.' },
-  { q: 'Can I control the lights from my phone?', a: 'Absolutely. The Govee Home app gives you full control over 16 million colors, schedules, music sync, holiday scenes, and more. Works on both iOS and Android. Also integrates with Alexa and Google Home.' },
-  { q: 'What is the AI House Visualizer?', a: 'It is powered by Google Nano Banana Pro — the most advanced AI image generation model available. Upload a photo of your home and the AI generates a photorealistic preview of what it would look like with permanent holiday lights installed. Completely free to use.' },
-  { q: 'When should I book?', a: 'We recommend booking as early as possible. Our fall schedule fills quickly and we can only take a limited number of installations per week. Booking early also locks in our current promotional pricing.' },
+  { q: 'What are permanent holiday lights?', a: 'Permanent holiday lights — like the Govee Permanent Outdoor Lights we install — are weatherproof LED fixtures installed once and stay on your home year-round. You control colors, patterns, and schedules through a smartphone app. No ladder every season, no tangled wires in the garage.' },
+  { q: 'How much does installation cost?', a: 'Our pricing starts at $800 for a 1-story home front, $1,200 for a 2-story home front, and $1,500+ for custom or larger properties. Every home is different, which is why we offer a free on-site consultation and exact quote. And right now, our sale takes 50% off installation.' },
+  { q: 'How long does a typical install take?', a: 'Most homes are done in about half a day. We handle everything — mounting the brackets, running the wiring, syncing the app, and walking you through your first set of scenes before we leave.' },
+  { q: 'Are the lights visible during the day?', a: 'The brackets are low-profile and designed to blend into your roofline and eaves. Most homeowners find them nearly invisible in daylight — clean and architectural, not an eyesore.' },
+  { q: 'Can I control the colors and patterns myself?', a: "Yes. The Govee app gives you full control over 16 million+ colors, dozens of pre-set holiday scenes, custom patterns, schedules, and even music-sync modes. Switch from Christmas red and green to your team's game-day colors with a single tap." },
+  { q: 'Are the lights safe in Nebraska winters?', a: "Absolutely. Govee permanent lights are IP67 waterproof and built for extreme temperature swings — rain, snow, ice, and Omaha's notoriously cold winters are no problem." },
+  { q: 'Do you offer a warranty?', a: "Yes — we offer a limited workmanship warranty on our installations, and the Govee hardware comes with its own manufacturer's warranty. If something isn't working right after install, reach out and we'll make it right." },
+  { q: 'Do the lights work with Alexa or Google Home?', a: 'Yes. Govee integrates with Amazon Alexa, Google Home, and Apple HomeKit so you can control your lights with voice commands or fold them into your existing smart home routines.' },
+  { q: 'What is the AI House Visualizer?', a: 'Our AI House Visualizer is a first-of-its-kind tool that lets you upload a photo of your home and see exactly what it would look like with permanent holiday lights installed. Powered by advanced AI image generation, it gives you a realistic preview before you commit — completely free.' },
+  { q: 'How do I get started?', a: "Simply book a free on-site consultation using our calendar below. We'll visit your home, measure your roofline, walk you through the options, and give you a no-obligation custom quote — all in about 20–30 minutes." },
 ]
 
-const PRICING: PricingTier[] = [
-  { tier: 'Standard', price: '1,000', desc: 'Perfect for smaller homes and townhouses up to 80 linear feet.', features: ['Up to 80 linear feet', 'Commercial-grade Govee LEDs', 'Professional installation', 'Govee Home app control', '16 million color options', 'Satisfaction guarantee'] },
-  { tier: 'Premium', price: '1,800', desc: 'Our most popular package for mid-size homes with full coverage.', features: ['Up to 160 linear feet', 'Everything in Standard', 'Gutter and fascia mounting', 'Custom color scene setup', 'Priority scheduling', 'Annual inspection included'], featured: true },
-  { tier: 'Estate', price: 'Custom', desc: 'For large homes, multi-structures, and commercial properties.', features: ['Unlimited linear footage', 'Everything in Premium', 'Multi-structure coverage', 'Dedicated project manager', 'Same-day service available', 'Commercial billing available'] },
+const GOVEE_CARDS: GoveeCard[] = [
+  { title: '16 Million+ Colors', body: 'RGBIC tech lets each bulb display a unique color independently. Create gradients, chasing patterns, music-sync animations, or exact holiday palettes.' },
+  { title: 'Intelligent Scheduling', body: 'Set auto schedules, program holidays months in advance, or let the app suggest lighting by date. Your home lights up automatically.' },
+  { title: 'Energy Efficient', body: 'Run your entire roofline for less than a single string of old-school bulbs. Govee LEDs use a fraction of traditional incandescent energy.' },
+  { title: 'IP67 Weatherproof', body: "Professional-grade fixtures rated for rain, snow, ice, and Omaha's extreme temperature swings — holding up year after year." },
+  { title: 'No Seasonal Hassle', body: 'Mounted once, stays forever. No ladder every November, no storage every January — just tap the app and your home transforms.' },
+  { title: 'Local Expert Install', body: "We're your Omaha neighbors. Full install, wiring, app setup, and a walkthrough so you're in control of every color from day one." },
 ]
 
-const MARQUEE_ITEMS = ['Omaha Permanent Light Specialists', '16 Million Colors', 'Half-Day Installation', 'Govee Smart Control', 'No Seasonal Takedown', 'Commercial Grade LEDs', 'Free Consultation', 'Satisfaction Guaranteed']
 
-// ─── Hooks ────────────────────────────────────────────────────────────────────
-function useScrolled(threshold = 20) {
-  const [scrolled, setScrolled] = useState(false)
-  useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > threshold)
-    window.addEventListener('scroll', fn, { passive: true })
-    return () => window.removeEventListener('scroll', fn)
-  }, [threshold])
-  return scrolled
+const PRICING_TIERS: PricingTier[] = [
+  { name: '1-Story Front', startingAt: 'Starting at $800', desc: 'Front roofline of a single-story home', features: ['Front roofline coverage', 'Full app setup & walkthrough', 'IP67 weatherproof fixtures', 'Workmanship warranty', 'Free consultation'] },
+  { name: '2-Story Front', startingAt: 'Starting at $1,200', desc: 'Front roofline of a two-story home', features: ['Front roofline coverage', 'Full app setup & walkthrough', 'IP67 weatherproof fixtures', 'Workmanship warranty', 'Free consultation', 'Priority scheduling'], featured: true },
+  { name: 'Custom', startingAt: 'Starting at $1,500', desc: 'Large homes, full wrap, or commercial', features: ['Full or partial wrap — your choice', 'Full app setup & walkthrough', 'IP67 weatherproof fixtures', 'Extended workmanship warranty', 'Free consultation', 'Priority scheduling', 'Annual check-up visit'] },
+]
+
+const PROCESS_STEPS: ProcessStep[] = [
+  { num: '01', title: 'Book Free Consult', desc: "Schedule a 20–30 minute on-site visit. We come to you — no cost, no obligation." },
+  { num: '02', title: 'Custom Quote', desc: 'We measure your roofline, walk through options, and give you a same-day custom quote.' },
+  { num: '03', title: 'Half-Day Install', desc: 'Our team installs everything in about half a day. Clean, professional, zero mess left behind.' },
+  { num: '04', title: 'Enjoy Forever', desc: 'App walkthrough complete. Tap a button and your home transforms for every holiday, every season.' },
+]
+
+//  Star Field 
+
+function StarField(): JSX.Element {
+  const stars = useRef<Array<{ x: number; y: number; r: number; dur: number; delay: number }>>([])
+  if (stars.current.length === 0) {
+    for (let i = 0; i < 180; i++) {
+      stars.current.push({ x: Math.random() * 100, y: Math.random() * 100, r: Math.random() * 1.6 + 0.2, dur: Math.random() * 3 + 2, delay: Math.random() * 6 })
+    }
+  }
+  return (
+    <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }} viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <radialGradient id="heroGrad" cx="50%" cy="0%" r="100%">
+          <stop offset="0%" stopColor="#071932" />
+          <stop offset="60%" stopColor="#030a18" />
+          <stop offset="100%" stopColor="#010810" />
+        </radialGradient>
+      </defs>
+      <rect width="100" height="100" fill="url(#heroGrad)" />
+      {stars.current.map((s, i) => (
+        <circle key={i} cx={s.x} cy={s.y} r={s.r} fill="#cce8ff" opacity="0.55">
+          <animate attributeName="opacity" values="0.55;0.1;0.55" dur={`${s.dur}s`} begin={`${s.delay}s`} repeatCount="indefinite" />
+        </circle>
+      ))}
+      <circle cx="82" cy="10" r="5.5" fill="rgba(255,245,210,0.1)" stroke="rgba(255,245,210,0.14)" strokeWidth="0.4" />
+      <circle cx="84" cy="8.8" r="4.8" fill="#010810" />
+    </svg>
+  )
 }
 
-function useFadeIn() {
+//  Light String 
+
+function LightString(): JSX.Element {
+  return (
+    <div style={{ position: 'absolute', top: 70, left: 0, right: 0, display: 'flex', justifyContent: 'space-around', pointerEvents: 'none', overflow: 'hidden', height: 50, alignItems: 'flex-start', zIndex: 3 }}>
+      {Array.from({ length: 52 }, (_, i) => {
+        const color = BULB_COLORS[i % BULB_COLORS.length]
+        return (
+          <div key={i} style={{ width: 7, height: 11, borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%', background: `radial-gradient(circle at 38% 28%, #fff 0%, ${color} 70%)`, boxShadow: `0 0 8px 2px ${color}88`, flexShrink: 0, animation: `flicker ${(2.1 + (i * 0.13 % 1.8)).toFixed(2)}s ease-in-out ${(i * 0.09).toFixed(2)}s infinite` }} />
+        )
+      })}
+    </div>
+  )
+}
+
+//  FAQ Row 
+
+function FaqRow({ faq, index, open, onToggle }: { faq: FaqItem; index: number; open: boolean; onToggle: (i: number) => void }): JSX.Element {
+  return (
+    <div className="faq-item" style={{ background: 'var(--bg-card)', border: `1px solid ${open ? 'rgba(0,212,255,0.28)' : 'var(--border)'}`, borderRadius: 'var(--radius-sm)', overflow: 'hidden', transition: 'border-color 0.28s', marginBottom: 10 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '18px 22px', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-white)', gap: 14, userSelect: 'none' }} onClick={() => onToggle(index)}>
+        <span>{faq.q}</span>
+        <div style={{ width: 24, height: 24, flexShrink: 0, border: `1.5px solid ${open ? 'var(--accent)' : 'rgba(255,255,255,0.3)'}`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', transition: 'transform 0.32s, border-color 0.28s', transform: open ? 'rotate(45deg)' : 'none', color: open ? 'var(--accent)' : 'rgba(255,255,255,0.5)' }}>+</div>
+      </div>
+      <div style={{ overflow: 'hidden', transition: 'max-height 0.42s ease, padding 0.28s', maxHeight: open ? 400 : 0, padding: open ? '0 22px 20px' : '0 22px' }}>
+        <p style={{ fontSize: '0.92rem', color: 'var(--text-mid)', lineHeight: 1.78 }}>{faq.a}</p>
+      </div>
+    </div>
+  )
+}
+
+//  Countdown Timer 
+
+function CountdownTimer(): JSX.Element {
+  const [time, setTime] = useState({ d: 0, h: 0, m: 0, s: 0 })
   useEffect(() => {
-    const els = document.querySelectorAll('.fi')
-    const obs = new IntersectionObserver(
-      (entries) => entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('vis'); obs.unobserve(e.target) } }),
-      { threshold: 0.08 }
-    )
+    const target = new Date()
+    target.setDate(target.getDate() + 14)
+    target.setHours(23, 59, 59, 0)
+    const tick = () => {
+      const diff = target.getTime() - Date.now()
+      if (diff <= 0) { setTime({ d: 0, h: 0, m: 0, s: 0 }); return }
+      setTime({ d: Math.floor(diff / 86400000), h: Math.floor((diff % 86400000) / 3600000), m: Math.floor((diff % 3600000) / 60000), s: Math.floor((diff % 60000) / 1000) })
+    }
+    tick()
+    const id = setInterval(tick, 1000)
+    return () => clearInterval(id)
+  }, [])
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return (
+    <div style={{ display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'center' }}>
+      {([['d', 'Days'], ['h', 'Hrs'], ['m', 'Min'], ['s', 'Sec']] as const).map(([k, label]) => (
+        <div key={k} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+          <div style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 6, padding: '6px 12px', fontFamily: 'var(--font-serif)', fontSize: '1.4rem', fontWeight: 700, color: '#fff', minWidth: 52, textAlign: 'center', lineHeight: 1 }}>
+            {pad(time[k as keyof typeof time])}
+          </div>
+          <span style={{ fontSize: '0.6rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)' }}>{label}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+//  Scroll fade-in hook 
+
+function useFadeIn(): void {
+  useEffect(() => {
+    const els = document.querySelectorAll<HTMLElement>('.fi')
+    const obs = new IntersectionObserver(entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('vis') }), { threshold: 0.05 })
     els.forEach(el => obs.observe(el))
+    setTimeout(() => { els.forEach(el => { const r = el.getBoundingClientRect(); if (r.top < window.innerHeight) el.classList.add('vis') }) }, 120)
     return () => obs.disconnect()
   }, [])
 }
 
-function useCountdown(targetDate: Date) {
-  const calc = () => {
-    const diff = targetDate.getTime() - Date.now()
-    if (diff <= 0) return { d: 0, h: 0, m: 0, s: 0 }
-    return { d: Math.floor(diff / 86400000), h: Math.floor((diff % 86400000) / 3600000), m: Math.floor((diff % 3600000) / 60000), s: Math.floor((diff % 60000) / 1000) }
-  }
-  const [time, setTime] = useState(calc)
-  useEffect(() => { const id = setInterval(() => setTime(calc()), 1000); return () => clearInterval(id) })
-  return time
-}
+//  AI Visualizer 
 
-// ─── Icons ────────────────────────────────────────────────────────────────────
-const ArrowRight = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:14,height:14}}>
-    <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
-  </svg>
-)
+function AIVisualizer(): JSX.Element {
+  const [stage, setStage] = useState<'idle' | 'preview' | 'loading' | 'result' | 'error'>('idle')
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null)
+  const [resultImage, setResultImage] = useState<string | null>(null)
+  const [dragOver, setDragOver] = useState(false)
+  const [errorMsg, setErrorMsg] = useState('')
+  const [lightStyle, setLightStyle] = useState('Christmas (Red & Green)')
+  const fileRef = useRef<HTMLInputElement>(null)
 
-const UploadCloud = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{width:28,height:28}}>
-    <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
-    <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
-  </svg>
-)
-
-const CpuIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{width:18,height:18}}>
-    <rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/>
-    <line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/>
-    <line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/>
-    <line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/>
-    <line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/>
-  </svg>
-)
-
-const CheckSvg = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{width:9,height:9}}>
-    <polyline points="20 6 9 17 4 12"/>
-  </svg>
-)
-
-const PlusSvg = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{width:14,height:14}}>
-    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-  </svg>
-)
-
-const StarSvg = () => (
-  <svg viewBox="0 0 24 24" fill="var(--gold)" stroke="none" style={{width:13,height:13}}>
-    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-  </svg>
-)
-
-// ─── Nav ──────────────────────────────────────────────────────────────────────
-function Nav({ onBook }: { onBook: () => void }) {
-  const scrolled = useScrolled()
-  const [open, setOpen] = useState(false)
-  const navLinks = ['Services', 'Gallery', 'Pricing', 'AI Visualizer', 'FAQ']
-  const scrollTo = (id: string) => {
-    setOpen(false)
-    document.getElementById(id.toLowerCase().replace(/\s+/g, '-'))?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
-  return (
-    <>
-      <nav className={'nav' + (scrolled ? ' scrolled' : '')}>
-        <div className="nav-logo" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-          Ashton Holiday Lighting<span>Omaha, Nebraska</span>
-        </div>
-        <div className="nav-links">
-          {navLinks.map(l => <span key={l} className="nav-link" onClick={() => scrollTo(l)}>{l}</span>)}
-        </div>
-        <button className="btn btn-primary nav-cta" style={{fontSize:'0.78rem',padding:'10px 22px'}} onClick={onBook}>Book Free Consult</button>
-        <button className="hamburger" onClick={() => setOpen(!open)} aria-label="Menu">
-          <span style={{transform: open ? 'rotate(45deg) translate(4px,4px)' : 'none'}}/>
-          <span style={{opacity: open ? 0 : 1}}/>
-          <span style={{transform: open ? 'rotate(-45deg) translate(4px,-4px)' : 'none'}}/>
-        </button>
-      </nav>
-      <div className={'mobile-menu' + (open ? ' open' : '')}>
-        {navLinks.map(l => <a key={l} onClick={() => scrollTo(l)}>{l}</a>)}
-        <button className="mobile-cta" onClick={() => { setOpen(false); onBook() }}>Book Free Consultation</button>
-      </div>
-    </>
-  )
-}
-
-// ─── Hero ─────────────────────────────────────────────────────────────────────
-function Hero({ onBook, onVisualizer }: { onBook: () => void; onVisualizer: () => void }) {
-  return (
-    <section id="hero" style={{
-      position: 'relative', minHeight: '100vh', display: 'flex', alignItems: 'center',
-      overflow: 'hidden', background: 'var(--ink)'
-    }}>
-      <div style={{
-        position: 'absolute', inset: 0,
-        backgroundImage: 'linear-gradient(rgba(245,237,224,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(245,237,224,0.025) 1px, transparent 1px)',
-        backgroundSize: '72px 72px',
-        maskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%, black 0%, transparent 100%)',
-        WebkitMaskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%, black 0%, transparent 100%)'
-      }} />
-      <div style={{
-        position: 'absolute', inset: 0,
-        background: 'radial-gradient(ellipse 70% 50% at 50% -10%, rgba(232,160,32,0.08) 0%, transparent 60%)'
-      }} />
-      <div style={{
-        position: 'absolute', left: '50%', top: 0, width: 1, height: '40%',
-        background: 'linear-gradient(to bottom, transparent, rgba(232,160,32,0.3), transparent)',
-        transform: 'translateX(-50%)'
-      }} />
-      <div style={{
-        position: 'relative', zIndex: 2, maxWidth: 'var(--inner-max)',
-        margin: '0 auto', padding: '0 48px', paddingTop: 120, width: '100%'
-      }}>
-        <div style={{
-          display: 'inline-flex', alignItems: 'center', gap: 8,
-          background: 'rgba(232,160,32,0.08)', border: '1px solid rgba(232,160,32,0.18)',
-          borderRadius: 100, padding: '6px 16px 6px 10px', marginBottom: 40
-        }}>
-          <div style={{
-            width: 7, height: 7, borderRadius: '50%', background: 'var(--gold)',
-            animation: 'pulse-gold 2.4s ease-in-out infinite'
-          }} />
-          <span style={{
-            fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 500,
-            letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--gold)'
-          }}>Now Booking Fall 2025 — Limited Slots Remaining</span>
-        </div>
-        <h1 style={{
-          fontFamily: 'var(--font-display)', fontSize: 'clamp(3.2rem,8vw,6.8rem)',
-          fontWeight: 900, lineHeight: 0.95, letterSpacing: '-0.03em',
-          color: 'var(--cream)', marginBottom: 32
-        }}>
-          Your Home.<br />
-          <em style={{fontStyle:'italic', color:'var(--gold)'}}>Unforgettable</em><br />
-          Every Night.
-        </h1>
-        <p style={{
-          fontSize: 'clamp(1rem,1.8vw,1.15rem)', lineHeight: 1.78,
-          color: 'var(--cream-mid)', maxWidth: 500, marginBottom: 48
-        }}>
-          Omaha permanent holiday lighting specialists. Commercial-grade Govee LEDs installed once, controlled from your phone, glowing every season.
-        </p>
-        <div style={{display:'flex', gap:12, flexWrap:'wrap', marginBottom:64}}>
-          <button className="btn btn-primary" style={{fontSize:'0.95rem',padding:'15px 36px'}} onClick={onBook}>
-            Book Free Consultation
-          </button>
-          <button className="btn btn-outline" style={{fontSize:'0.95rem',padding:'14px 35px'}} onClick={onVisualizer}>
-            Preview My Home with AI
-          </button>
-        </div>
-        <div style={{display:'flex', gap:32, flexWrap:'wrap', alignItems:'center'}}>
-          <div style={{display:'flex', alignItems:'center', gap:6}}>
-            {[1,2,3,4,5].map(i => <StarSvg key={i}/>)}
-            <span style={{fontSize:'0.82rem', color:'var(--cream-mid)', marginLeft:6, fontWeight:600}}>5.0 Rating</span>
-          </div>
-          {['Installed in half a day','No seasonal takedown','Serving Omaha metro'].map(item => (
-            <div key={item} style={{display:'flex', alignItems:'center', gap:8}}>
-              <div style={{
-                width:16, height:16, borderRadius:'50%',
-                background:'rgba(232,160,32,0.1)', border:'1px solid rgba(232,160,32,0.2)',
-                display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0
-              }}>
-                <CheckSvg/>
-              </div>
-              <span style={{fontSize:'0.82rem', color:'var(--cream-dim)', fontWeight:500}}>{item}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// ─── Marquee ──────────────────────────────────────────────────────────────────
-function Marquee() {
-  const doubled = [...MARQUEE_ITEMS, ...MARQUEE_ITEMS]
-  return (
-    <div className="marquee-strip">
-      <div className="marquee-track">
-        {doubled.map((item, i) => (
-          <div key={i} className="marquee-item">
-            <div className="marquee-dot"/>
-            {item}
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-// ─── Stats ────────────────────────────────────────────────────────────────────
-function Stats() {
-  const stats = [
-    { number: '16M+', label: 'Color Options', sub: 'Full spectrum Govee LEDs' },
-    { number: '$1,000', label: 'Starting Price', sub: 'Transparent flat-rate pricing' },
-    { number: '4 hrs', label: 'Avg Install Time', sub: 'Most homes done same day' },
-    { number: '50%', label: 'Early Bird Savings', sub: 'Book before October 1st' },
+  const LIGHT_STYLES = [
+    'Christmas (Red & Green)', 'Warm White Classic', 'Halloween (Orange & Purple)',
+    'Fourth of July (Red, White & Blue)', "Valentine's Day (Pink & Red)",
+    "St. Patrick's Day (Green)", 'Easter (Pastel Rainbow)', 'Custom Color Party',
   ]
-  return (
-    <div style={{padding:'0 48px', maxWidth:'calc(var(--inner-max) + 96px)', margin:'0 auto'}}>
-      <div className="stats-row fi">
-        {stats.map(s => (
-          <div key={s.label} className="stat-cell">
-            <div className="stat-number">{s.number}</div>
-            <div className="stat-label">{s.label}</div>
-            <div className="stat-sub">{s.sub}</div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
 
-// ─── Features ─────────────────────────────────────────────────────────────────
-function Features() {
-  const features = [
-    { title: 'Permanent Installation', body: 'Installed once, stays year-round. No ladders, no storage, no annual hassle. Just flip it on whenever you want.' },
-    { title: '16 Million Colors', body: 'Govee full-spectrum LEDs let you set any color, scene, or schedule. Match any holiday, sports team, or mood.' },
-    { title: 'App-Controlled', body: 'The Govee Home app puts full control in your pocket. Set timers, sync to music, or activate pre-built holiday scenes instantly.' },
-    { title: 'Half-Day Install', body: 'Our experienced team completes most residential installs in four hours or less. Minimal disruption, maximum impact.' },
-    { title: 'Weather-Resistant', body: 'Commercial-grade hardware rated for all Nebraska weather conditions. Rain, snow, heat — these lights are built to last.' },
-    { title: 'Local Omaha Business', body: 'We are your neighbors. We know Omaha homes, Omaha weather, and Omaha standards. Locally owned and operated.' },
-  ]
-  const icons = [
-    <svg key="a" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
-    <svg key="b" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>,
-    <svg key="c" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>,
-    <svg key="d" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
-    <svg key="e" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
-    <svg key="f" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>,
-  ]
-  return (
-    <section id="services" style={{background:'var(--surface)', padding:'110px 48px'}}>
-      <div style={{maxWidth:'var(--inner-max)', margin:'0 auto'}}>
-        <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:80, alignItems:'center', marginBottom:72}}>
-          <div className="fi">
-            <div className="eyebrow">What We Do</div>
-            <h2 className="section-title">Permanent lights.<br/><em>Zero effort.</em></h2>
-          </div>
-          <div className="fi d1">
-            <p className="section-lead">We install commercial-grade permanent LED lighting systems on your home once. From that point forward, you control everything from your phone. No seasonal installation fees, no storage, no risk of falling off a ladder.</p>
-          </div>
-        </div>
-        <div className="feature-grid fi d2">
-          {features.map((f, i) => (
-            <div key={f.title} className="feature-cell">
-              <div className="feature-icon">{icons[i]}</div>
-              <div className="feature-title">{f.title}</div>
-              <div className="feature-body">{f.body}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// ─── Gallery ──────────────────────────────────────────────────────────────────
-function Gallery({ onVisualizer }: { onVisualizer: () => void }) {
-  const photos = [
-    { src: 'https://images.unsplash.com/photo-1543589077-47d81606c1bf?w=1200&q=80', alt: 'Home with warm white roofline lights' },
-    { src: 'https://images.unsplash.com/photo-1512389142860-9c449e58a543?w=800&q=80', alt: 'Holiday lighting on suburban home' },
-    { src: 'https://images.unsplash.com/photo-1576919228236-a097c32a5cd4?w=800&q=80', alt: 'Colorful LED roofline installation' },
-    { src: 'https://images.unsplash.com/photo-1482517967863-00e15c9b44be?w=800&q=80', alt: 'Permanent lights on two-story home' },
-    { src: 'https://images.unsplash.com/photo-1545048702-79362596cdc9?w=800&q=80', alt: 'Night view of holiday lighting' },
-  ]
-  return (
-    <section id="gallery" style={{background:'var(--ink-mid)', padding:'110px 48px'}}>
-      <div style={{maxWidth:'var(--inner-max)', margin:'0 auto'}}>
-        <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-end', marginBottom:48}}>
-          <div className="fi">
-            <div className="eyebrow">Our Work</div>
-            <h2 className="section-title">Real homes.<br/><em>Real results.</em></h2>
-          </div>
-          <div className="fi d1">
-            <button className="btn btn-outline" onClick={onVisualizer} style={{fontSize:'0.82rem', gap:8}}>
-              Preview Your Home <ArrowRight/>
-            </button>
-          </div>
-        </div>
-        <div className="gallery-grid fi d2">
-          {photos.map((p, i) => (
-            <div key={i} className={`gallery-item gallery-item-${i+1}`}>
-              <img src={p.src} alt={p.alt} loading="lazy"/>
-              <div style={{position:'absolute',inset:0,background:'linear-gradient(to top, rgba(15,13,10,0.4) 0%, transparent 50%)'}}/>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// ─── Process ──────────────────────────────────────────────────────────────────
-function Process({ onBook }: { onBook: () => void }) {
-  const steps = [
-    { num: '01', title: 'Free Consultation', body: 'We visit your home, measure the roofline, and provide an exact quote. No pressure, no obligation.' },
-    { num: '02', title: 'Custom Design', body: 'We plan the layout, choose mounting points, and configure your Govee system for optimal coverage.' },
-    { num: '03', title: 'Professional Install', body: 'Our team installs everything in half a day. We clean up completely and walk you through the app.' },
-    { num: '04', title: 'Enjoy Forever', body: 'Control your lights from anywhere. Change colors by season, holiday, or mood any time you want.' },
-  ]
-  return (
-    <section id="process" style={{background:'var(--surface)', padding:'110px 48px'}}>
-      <div style={{maxWidth:'var(--inner-max)', margin:'0 auto'}}>
-        <div style={{textAlign:'center', marginBottom:72}}>
-          <div className="eyebrow center fi">How It Works</div>
-          <h2 className="section-title fi d1">From booking to <em>lit up</em> in four steps.</h2>
-        </div>
-        <div className="process-grid fi d2">
-          {steps.map(s => (
-            <div key={s.num} className="process-step">
-              <div className="process-num">{s.num}</div>
-              <div className="process-title">{s.title}</div>
-              <div className="process-body">{s.body}</div>
-            </div>
-          ))}
-        </div>
-        <div style={{textAlign:'center', marginTop:56}} className="fi d3">
-          <button className="btn btn-primary" style={{fontSize:'0.95rem',padding:'15px 36px'}} onClick={onBook}>
-            Start with a Free Consultation
-          </button>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// ─── Pricing ──────────────────────────────────────────────────────────────────
-function Pricing({ onBook }: { onBook: () => void }) {
-  return (
-    <section id="pricing" style={{background:'var(--ink)', padding:'110px 48px'}}>
-      <div style={{maxWidth:'var(--inner-max)', margin:'0 auto'}}>
-        <div style={{textAlign:'center', marginBottom:56}}>
-          <div className="eyebrow center fi">Transparent Pricing</div>
-          <h2 className="section-title fi d1">No surprises. <em>Ever.</em></h2>
-          <p className="section-lead fi d2" style={{margin:'0 auto', textAlign:'center'}}>
-            Flat-rate pricing based on linear footage. What we quote is what you pay.
-          </p>
-        </div>
-        <div className="fi d2" style={{
-          background:'linear-gradient(90deg, rgba(192,57,43,0.1), rgba(192,57,43,0.05))',
-          border:'1px solid rgba(192,57,43,0.22)', borderRadius:'var(--r-md)',
-          padding:'14px 24px', marginBottom:36,
-          display:'flex', alignItems:'center', justifyContent:'center', gap:12
-        }}>
-          <div style={{width:7,height:7,borderRadius:'50%',background:'#e74c3c',flexShrink:0,boxShadow:'0 0 8px #e74c3c'}}/>
-          <span style={{fontSize:'0.88rem', color:'var(--cream-mid)'}}>
-            <strong style={{color:'var(--cream)'}}>Early Bird Sale Active:</strong> Book before October 1st and save up to 50% on installation.
-          </span>
-        </div>
-        <div className="pricing-grid fi d3">
-          {PRICING.map(p => (
-            <div key={p.tier} className={'pricing-card' + (p.featured ? ' featured' : '')}>
-              {p.featured && <div className="pricing-badge">Most Popular</div>}
-              <div className="pricing-tier">{p.tier}</div>
-              <div className="pricing-price">{p.price}</div>
-              <div className="pricing-desc">{p.desc}</div>
-              <div className="pricing-features">
-                {p.features.map(f => (
-                  <div key={f} className="pricing-feature">
-                    <div className="pricing-check"><CheckSvg/></div>
-                    {f}
-                  </div>
-                ))}
-              </div>
-              <button
-                className={'btn ' + (p.featured ? 'btn-primary' : 'btn-outline')}
-                style={{width:'100%', justifyContent:'center', padding:'13px'}}
-                onClick={onBook}
-              >
-                Get a Free Quote
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// ─── AI Visualizer ────────────────────────────────────────────────────────────
-function AIVisualizer() {
-  const [file, setFile] = useState<File | null>(null)
-  const [preview, setPreview] = useState<string | null>(null)
-  const [result, setResult] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [drag, setDrag] = useState(false)
-  const [style, setStyle] = useState('warm-white')
-  const [density, setDensity] = useState('full')
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  const handleFile = (f: File) => {
-    if (!f.type.startsWith('image/')) { setError('Please upload an image file.'); return }
-    if (f.size > 10 * 1024 * 1024) { setError('Image must be under 10MB.'); return }
-    setFile(f); setError(null); setResult(null)
+  const handleFile = useCallback((file: File) => {
+    if (!file.type.startsWith('image/')) { setErrorMsg('Please upload an image file (JPG, PNG, WEBP).'); return }
+    if (file.size > 10 * 1024 * 1024) { setErrorMsg('Image must be under 10MB.'); return }
+    setErrorMsg('')
     const reader = new FileReader()
-    reader.onload = e => setPreview(e.target?.result as string)
-    reader.readAsDataURL(f)
-  }
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault(); setDrag(false)
-    const f = e.dataTransfer.files[0]; if (f) handleFile(f)
+    reader.onload = (e) => { setUploadedImage(e.target?.result as string); setStage('preview') }
+    reader.readAsDataURL(file)
   }, [])
 
-  const generate = async () => {
-    if (!file) return
-    setLoading(true); setError(null); setResult(null)
-    const reader = new FileReader()
-    reader.onload = async (e) => {
-      const base64 = (e.target?.result as string).split(',')[1]
-      try {
-        const res = await fetch('/.netlify/functions/visualize', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image: base64, mimeType: file.type, style, density }),
-        })
-        const data = await res.json()
-        if (!res.ok) throw new Error(data.error || 'Generation failed')
-        setResult(data.imageUrl)
-      } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
-      } finally { setLoading(false) }
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault(); setDragOver(false)
+    const file = e.dataTransfer.files[0]
+    if (file) handleFile(file)
+  }, [handleFile])
+
+  const handleGenerate = async () => {
+    if (!uploadedImage) return
+    setStage('loading')
+    setResultImage(null)
+    try {
+      const response = await fetch('/.netlify/functions/visualize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageData: uploadedImage, lightStyle }),
+      })
+      if (!response.ok) throw new Error(`Status ${response.status}`)
+      const data = await response.json()
+      if (data.imageUrl) { setResultImage(data.imageUrl); setStage('result') }
+      else throw new Error('No image returned')
+    } catch (err) {
+      console.error(err)
+      setErrorMsg('AI generation encountered an issue. Please try again or call us at (402) 889-8640.')
+      setStage('error')
     }
-    reader.readAsDataURL(file)
   }
 
-  const styleLabels: Record<string, string> = {
-    'warm-white': 'Warm White', 'cool-white': 'Cool White',
-    'multicolor': 'Multicolor', 'red-green': 'Classic Red and Green', 'blue-white': 'Blue and White'
-  }
-  const densityLabels: Record<string, string> = {
-    'full': 'Full Roofline', 'accent': 'Accent Only', 'outline': 'Full Outline'
-  }
+  const reset = () => { setStage('idle'); setUploadedImage(null); setResultImage(null); setErrorMsg('') }
 
   return (
-    <section id="ai-visualizer" style={{background:'var(--surface)', padding:'110px 48px'}}>
-      <div style={{maxWidth:'var(--inner-max)', margin:'0 auto'}}>
-        <div style={{display:'grid', gridTemplateColumns:'1fr 1.4fr', gap:72, alignItems:'start'}}>
-          <div>
-            <div className="eyebrow fi">AI-Powered Preview</div>
-            <h2 className="section-title fi d1">See your home<br/><em>before you commit.</em></h2>
-            <p className="section-lead fi d2" style={{marginBottom:32}}>
-              Upload a photo of your home and our AI generates a photorealistic preview of what it would look like with permanent holiday lights installed. Powered by Google Nano Banana Pro — the most advanced image generation model available.
-            </p>
-            <div className="fi d3" style={{display:'flex', flexDirection:'column', gap:0}}>
-              {[
-                {label:'AI Model', value:'Nano Banana Pro (Gemini 3 Pro Image)'},
-                {label:'Technology', value:'Google Gemini 3 Diffusion Transformer'},
-                {label:'Output', value:'Photorealistic 1024x1024 rendering'},
-                {label:'Processing', value:'Approx. 15 to 30 seconds per image'},
-              ].map(item => (
-                <div key={item.label} style={{display:'flex', justifyContent:'space-between', padding:'13px 0', borderBottom:'1px solid var(--border)'}}>
-                  <span style={{fontSize:'0.8rem', color:'var(--cream-dim)', fontFamily:'var(--font-mono)', letterSpacing:'0.06em'}}>{item.label}</span>
-                  <span style={{fontSize:'0.82rem', color:'var(--cream)', fontWeight:500}}>{item.value}</span>
-                </div>
-              ))}
-            </div>
-            <div className="fi d4" style={{
-              marginTop:24, background:'var(--gold-glow)', border:'1px solid var(--border-gold)',
-              borderRadius:'var(--r-md)', padding:'16px 20px'
-            }}>
-              <p style={{fontSize:'0.84rem', color:'var(--cream-mid)', lineHeight:1.7}}>
-                <strong style={{color:'var(--gold)'}}>Pro tip:</strong> For best results, use a clear daytime photo of your home front exterior with good lighting and a straight-on angle.
-              </p>
-            </div>
-          </div>
+    <div style={{ maxWidth: 900, margin: '0 auto' }}>
+      {stage === 'idle' && (
+        <div
+          className={`upload-zone${dragOver ? ' drag-over' : ''}`}
+          onDragOver={e => { e.preventDefault(); setDragOver(true) }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={handleDrop}
+          onClick={() => fileRef.current?.click()}
+        >
+          <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f) }} />
+          <div style={{ fontSize: '3.5rem', marginBottom: 16 }}></div>
+          <p style={{ fontFamily: 'var(--font-sans)', fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-white)', marginBottom: 8 }}>Drop your home photo here</p>
+          <p style={{ fontSize: '0.88rem', color: 'var(--text-mid)', marginBottom: 20 }}>or click to browse — JPG, PNG, WEBP up to 10MB</p>
+          <button className="btn btn-primary btn-sm" style={{ pointerEvents: 'none' }}>Choose Photo</button>
+          {errorMsg && <p style={{ color: '#ff6b6b', fontSize: '0.85rem', marginTop: 14 }}>{errorMsg}</p>}
+        </div>
+      )}
 
-          <div className="fi d2">
-            <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:14, marginBottom:18}}>
-              <div className="form-group">
-                <label className="form-label">Light Style</label>
-                <select className="form-input" value={style} onChange={e => setStyle(e.target.value)}>
-                  {Object.entries(styleLabels).map(([v,l]) => <option key={v} value={v}>{l}</option>)}
+      {stage === 'preview' && uploadedImage && (
+        <div>
+          <div className="ai-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 24 }}>
+            <div>
+              <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--text-mid)', marginBottom: 10 }}>Your Home</p>
+              <img src={uploadedImage} alt="Your home" style={{ width: '100%', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', objectFit: 'cover', aspectRatio: '4/3' }} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              <div>
+                <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--text-mid)', marginBottom: 10 }}>Choose Light Style</p>
+                <select className="form-input" value={lightStyle} onChange={e => setLightStyle(e.target.value)}>
+                  {LIGHT_STYLES.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
-              <div className="form-group">
-                <label className="form-label">Coverage</label>
-                <select className="form-input" value={density} onChange={e => setDensity(e.target.value)}>
-                  {Object.entries(densityLabels).map(([v,l]) => <option key={v} value={v}>{l}</option>)}
-                </select>
+              <div style={{ background: 'rgba(0,212,255,0.06)', border: '1px solid rgba(0,212,255,0.15)', borderRadius: 'var(--radius-sm)', padding: '14px 16px' }}>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-mid)', lineHeight: 1.6 }}>
+                  <span style={{ color: 'var(--accent)', fontWeight: 600 }}> AI-Powered Preview</span><br />
+                  Our AI will generate a realistic visualization of your home with {lightStyle} permanent lighting installed along the roofline and eaves.
+                </p>
               </div>
+              <button className="btn btn-gold" onClick={handleGenerate} style={{ width: '100%', padding: '14px' }}>
+                 Generate AI Preview
+              </button>
+              <button className="btn btn-outline btn-sm" onClick={reset} style={{ width: '100%' }}>
+                ← Upload Different Photo
+              </button>
             </div>
-
-            {!preview ? (
-              <div
-                className={'upload-zone' + (drag ? ' drag-over' : '')}
-                onClick={() => inputRef.current?.click()}
-                onDragOver={e => { e.preventDefault(); setDrag(true) }}
-                onDragLeave={() => setDrag(false)}
-                onDrop={handleDrop}
-              >
-                <div className="upload-icon"><UploadCloud/></div>
-                <p style={{fontSize:'1rem', fontWeight:600, color:'var(--cream)', marginBottom:8}}>Drop your home photo here</p>
-                <p style={{fontSize:'0.84rem', color:'var(--cream-dim)', marginBottom:20}}>or click to browse — JPG, PNG, WEBP up to 10MB</p>
-                <button className="btn btn-ghost" style={{pointerEvents:'none'}}>Choose File</button>
-                <input ref={inputRef} type="file" accept="image/*" style={{display:'none'}} onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])}/>
-              </div>
-            ) : (
-              <div style={{borderRadius:'var(--r-lg)', overflow:'hidden', border:'1px solid var(--border-gold)', marginBottom:14}}>
-                <img src={preview} alt="Your home" style={{width:'100%', maxHeight:300, objectFit:'cover'}}/>
-              </div>
-            )}
-
-            {error && (
-              <div style={{background:'rgba(192,57,43,0.08)', border:'1px solid rgba(192,57,43,0.25)', borderRadius:'var(--r-md)', padding:'12px 16px', marginBottom:14}}>
-                <p style={{fontSize:'0.875rem', color:'#e74c3c'}}>{error}</p>
-              </div>
-            )}
-
-            {loading && (
-              <div style={{marginBottom:14}}>
-                <div style={{display:'flex', justifyContent:'space-between', marginBottom:8}}>
-                  <span style={{fontSize:'0.78rem', color:'var(--cream-dim)'}}>Generating with Nano Banana Pro...</span>
-                  <span style={{fontSize:'0.78rem', color:'var(--gold)', fontFamily:'var(--font-mono)'}}>~20s</span>
-                </div>
-                <div style={{background:'var(--surface-3)', borderRadius:4, overflow:'hidden', height:3}}>
-                  <div style={{
-                    height:'100%', borderRadius:4,
-                    background:'linear-gradient(90deg, transparent, var(--gold), var(--gold-light), var(--gold), transparent)',
-                    backgroundSize:'200% 100%',
-                    animation:'banner-scroll 1.8s ease-in-out infinite'
-                  }}/>
-                </div>
-              </div>
-            )}
-
-            {result && (
-              <div style={{marginBottom:14}}>
-                <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10}}>
-                  <span style={{fontSize:'0.82rem', fontWeight:600, color:'var(--cream)'}}>AI-Generated Preview</span>
-                  <div style={{
-                    display:'flex', alignItems:'center', gap:6,
-                    background:'rgba(26,122,74,0.1)', border:'1px solid rgba(26,122,74,0.25)',
-                    borderRadius:100, padding:'3px 10px'
-                  }}>
-                    <div style={{width:6, height:6, borderRadius:'50%', background:'#2ecc71'}}/>
-                    <span style={{fontFamily:'var(--font-mono)', fontSize:'0.58rem', fontWeight:700, letterSpacing:'0.1em', color:'#2ecc71'}}>COMPLETE</span>
-                  </div>
-                </div>
-                <div style={{borderRadius:'var(--r-lg)', overflow:'hidden', border:'1px solid var(--border-gold)'}}>
-                  <img src={result} alt="AI visualization" style={{width:'100%'}}/>
-                </div>
-              </div>
-            )}
-
-            {preview && (
-              <div style={{display:'flex', gap:10, marginTop:14}}>
-                {!loading && (
-                  <button className="btn btn-primary" style={{flex:1, justifyContent:'center', padding:'13px'}} onClick={generate} disabled={loading}>
-                    {result ? 'Regenerate Preview' : 'Generate Preview'}
-                  </button>
-                )}
-                <button className="btn btn-ghost" onClick={() => { setFile(null); setPreview(null); setResult(null); setError(null) }}>
-                  Reset
-                </button>
-              </div>
-            )}
           </div>
         </div>
-      </div>
-    </section>
+      )}
+
+      {stage === 'loading' && (
+        <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+          <div style={{ width: 80, height: 80, margin: '0 auto 28px', position: 'relative' }}>
+            <div style={{ position: 'absolute', inset: 0, border: '3px solid rgba(0,212,255,0.15)', borderRadius: '50%' }} />
+            <div style={{ position: 'absolute', inset: 0, border: '3px solid transparent', borderTopColor: 'var(--accent)', borderRadius: '50%', animation: 'spin-slow 1s linear infinite' }} />
+            <div style={{ position: 'absolute', inset: 8, border: '2px solid transparent', borderTopColor: 'var(--accent2)', borderRadius: '50%', animation: 'spin-slow 0.7s linear infinite reverse' }} />
+          </div>
+          <p style={{ fontFamily: 'var(--font-sans)', fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-white)', marginBottom: 8 }}>AI is visualizing your home...</p>
+          <p style={{ fontSize: '0.88rem', color: 'var(--text-mid)', marginBottom: 24 }}>Analyzing roofline, applying {lightStyle} lighting — this takes about 15–30 seconds</p>
+          <div style={{ maxWidth: 320, margin: '0 auto', background: 'rgba(255,255,255,0.05)', borderRadius: 4, overflow: 'hidden' }}>
+            <div className="progress-bar" style={{ width: '100%' }} />
+          </div>
+        </div>
+      )}
+
+      {stage === 'result' && resultImage && uploadedImage && (
+        <div>
+          <div className="ai-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 24 }}>
+            <div>
+              <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--text-mid)', marginBottom: 10 }}>Before</p>
+              <img src={uploadedImage} alt="Before" style={{ width: '100%', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', objectFit: 'cover', aspectRatio: '4/3' }} />
+            </div>
+            <div>
+              <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: 10 }}> After — AI Preview</p>
+              <img src={resultImage} alt="AI visualization" style={{ width: '100%', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,212,255,0.3)', objectFit: 'cover', aspectRatio: '4/3', boxShadow: '0 0 30px rgba(0,212,255,0.2)' }} />
+            </div>
+          </div>
+          <div style={{ background: 'rgba(0,212,255,0.06)', border: '1px solid rgba(0,212,255,0.2)', borderRadius: 'var(--radius-md)', padding: '20px 24px', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+            <div>
+              <p style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, color: 'var(--text-white)', marginBottom: 4 }}>Love what you see?</p>
+              <p style={{ fontSize: '0.88rem', color: 'var(--text-mid)' }}>Book your free consultation and we'll bring this vision to life — usually within 2 weeks.</p>
+            </div>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              <button className="btn btn-gold" onClick={() => document.getElementById('booking')?.scrollIntoView({ behavior: 'smooth' })}>Book Free Consult →</button>
+              <button className="btn btn-outline btn-sm" onClick={reset}>Try Another Photo</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {stage === 'error' && (
+        <div style={{ textAlign: 'center', padding: '48px 20px' }}>
+          <div style={{ fontSize: '3rem', marginBottom: 16 }}></div>
+          <p style={{ fontFamily: 'var(--font-sans)', fontSize: '1rem', fontWeight: 600, color: 'var(--text-white)', marginBottom: 8 }}>Generation Failed</p>
+          <p style={{ fontSize: '0.88rem', color: 'var(--text-mid)', marginBottom: 24, maxWidth: 400, margin: '0 auto 24px' }}>{errorMsg}</p>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button className="btn btn-primary btn-sm" onClick={() => setStage('preview')}>Try Again</button>
+            <button className="btn btn-outline btn-sm" onClick={reset}>Upload New Photo</button>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
 
-// ─── FAQ ──────────────────────────────────────────────────────────────────────
-function FAQ() {
-  const [open, setOpen] = useState<number | null>(null)
+//  Main App 
+
+export default function App(): JSX.Element {
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [openFaq, setOpenFaq] = useState<number | null>(null)
+  const [formState, setFormState] = useState({ first: '', last: '', email: '', phone: '', interest: 'Permanent Holiday Lights (Govee)', message: '' })
+  const [formStatus, setFormStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle')
+  const [formError, setFormError] = useState('')
+  const [navScrolled, setNavScrolled] = useState(false)
+
+  useFadeIn()
+
+  useEffect(() => {
+    const onScroll = () => setNavScrolled(window.scrollY > 40)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  const scrollTo = (id: string) => { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }); setMenuOpen(false) }
+
+  const handleSubmit = async () => {
+    if (!formState.first || !formState.email) { setFormError('Please enter at least your first name and email.'); return }
+    setFormError(''); setFormStatus('sending')
+    try {
+      const res = await fetch('/.netlify/functions/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ firstName: formState.first, lastName: formState.last, email: formState.email, phone: formState.phone, interest: formState.interest, message: formState.message }),
+      })
+      if (res.ok) { setFormStatus('success') } else { throw new Error(`Status ${res.status}`) }
+    } catch { setFormStatus('error'); setFormError('Something went wrong — please call us at (402) 889-8640.') }
+  }
+
+  const inp = (field: keyof typeof formState) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setFormState(s => ({ ...s, [field]: e.target.value }))
+
   return (
-    <section id="faq" style={{background:'var(--ink)', padding:'110px 48px'}}>
-      <div style={{maxWidth:'var(--inner-max)', margin:'0 auto'}}>
-        <div style={{display:'grid', gridTemplateColumns:'1fr 1.6fr', gap:80, alignItems:'start'}}>
-          <div>
-            <div className="eyebrow fi">FAQ</div>
-            <h2 className="section-title fi d1">Common<br/><em>questions.</em></h2>
-            <p className="section-lead fi d2" style={{fontSize:'0.95rem', marginTop:0}}>
-              Everything you need to know before booking. Still have questions? Call or text us directly.
-            </p>
+    <>
+      {/*  NAV  */}
+      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 44px', height: 70, background: navScrolled ? 'rgba(3,6,15,0.97)' : 'rgba(3,6,15,0.7)', backdropFilter: 'blur(20px)', borderBottom: `1px solid ${navScrolled ? 'rgba(0,180,255,0.15)' : 'transparent'}`, transition: 'all 0.4s' }}>
+        <div style={{ fontFamily: 'var(--font-serif)', fontSize: '1.05rem', fontWeight: 700, color: 'var(--accent2)', letterSpacing: '0.06em', textShadow: '0 0 20px rgba(255,209,102,0.4)', lineHeight: 1.2, cursor: 'pointer' }} onClick={() => scrollTo('hero')}>
+          Ashton Holiday Lighting
+          <span style={{ display: 'block', fontSize: '0.58rem', color: 'var(--accent)', fontFamily: 'var(--font-sans)', fontWeight: 600, letterSpacing: '0.28em', textTransform: 'uppercase' }}>Omaha, Nebraska</span>
+        </div>
+        <ul className="desktop-nav-links" style={{ display: 'flex', gap: 32, listStyle: 'none' }}>
+          {(['about', 'gallery', 'pricing', 'faq', 'booking'] as const).map(id => (
+            <li key={id}><a className="nav-link-item" style={{ color: 'var(--text-mid)', textDecoration: 'none', fontSize: '0.8rem', letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: 'var(--font-sans)', fontWeight: 500, cursor: 'pointer', transition: 'color 0.2s' }} onClick={() => scrollTo(id)}>{id.charAt(0).toUpperCase() + id.slice(1)}</a></li>
+          ))}
+        </ul>
+        <button className="btn nav-cta-btn desktop-nav-cta" style={{ background: 'transparent', border: '1.5px solid var(--accent)', color: 'var(--accent)', padding: '8px 22px', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-sans)', fontSize: '0.78rem', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer', transition: 'all 0.28s' }} onClick={() => scrollTo('booking')}>
+          Free Consult
+        </button>
+        <button className="hamburger" onClick={() => setMenuOpen(o => !o)}>
+          <span /><span /><span />
+        </button>
+      </nav>
+
+      {/*  MOBILE MENU  */}
+      <div className={`mobile-menu${menuOpen ? ' open' : ''}`}>
+        {(['about', 'gallery', 'pricing', 'faq', 'booking'] as const).map(id => (
+          <a key={id} onClick={() => scrollTo(id)}>{id.charAt(0).toUpperCase() + id.slice(1)}</a>
+        ))}
+        <button className="mobile-cta" onClick={() => scrollTo('booking')}>Book Free Consultation</button>
+      </div>
+
+      {/*  HERO  */}
+      <section id="hero" style={{ position: 'relative', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+        <StarField />
+        <LightString />
+        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 60%, rgba(0,212,255,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'relative', zIndex: 2, textAlign: 'center', padding: '0 24px', maxWidth: 860 }}>
+          <div className="fi" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.25)', borderRadius: 100, padding: '6px 18px', marginBottom: 28 }}>
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--accent)', boxShadow: '0 0 8px var(--accent)', display: 'inline-block' }} />
+            <span style={{ fontFamily: 'var(--font-sans)', fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--accent)' }}>Omaha's Premier Permanent Lighting Installer</span>
           </div>
-          <div className="fi d2">
-            {FAQS.map((faq, i) => (
-              <div key={i} className={'faq-item' + (open === i ? ' open' : '')}>
-                <button className="faq-trigger" onClick={() => setOpen(open === i ? null : i)}>
-                  <span className="faq-question">{faq.q}</span>
-                  <div className="faq-icon"><PlusSvg/></div>
-                </button>
-                <div className="faq-answer">
-                  <div className="faq-answer-inner">{faq.a}</div>
+          <h1 className="fi fi-delay-1" style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(2.6rem,6vw,5rem)', fontWeight: 900, lineHeight: 1.08, color: '#fff', marginBottom: 20, textShadow: '0 0 80px rgba(0,212,255,0.2)' }}>
+            Holiday Lights.<br /><em style={{ color: 'var(--accent2)', fontStyle: 'normal' }}>All Year Beautiful.</em>
+          </h1>
+          <p className="fi fi-delay-2" style={{ fontSize: 'clamp(1rem,2vw,1.2rem)', color: 'var(--text-mid)', lineHeight: 1.75, marginBottom: 44, maxWidth: 620, margin: '0 auto 44px' }}>
+            Govee permanent exterior lights — installed once, controlled forever. Transform your Omaha home with millions of colors for every holiday, every season.
+          </p>
+          <div className="fi fi-delay-3 hero-btns" style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 52 }}>
+            <button className="btn btn-gold" onClick={() => scrollTo('booking')}>
+               Book Free Consultation
+            </button>
+            <button className="btn btn-outline" onClick={() => scrollTo('visualizer')}>
+               See AI Preview of Your Home
+            </button>
+          </div>
+          <div className="fi fi-delay-4" style={{ display: 'flex', gap: 32, justifyContent: 'center', flexWrap: 'wrap' }}>
+            {[['', 'Free Consultation'], ['', 'Half-Day Install'], ['', '50% Off Now'], ['', 'Limited Warranty']].map(([icon, text]) => (
+              <span key={text} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.82rem', color: 'var(--text-mid)', fontFamily: 'var(--font-sans)' }}>
+                <span style={{ color: 'var(--accent)', fontWeight: 700 }}>{icon}</span>{text}
+              </span>
+            ))}
+          </div>
+        </div>
+        <div style={{ position: 'absolute', bottom: 32, left: '50%', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, color: 'var(--text-dim)', animation: 'bounce-y 2.2s ease-in-out infinite', zIndex: 2 }}>
+          <span style={{ fontSize: '0.65rem', letterSpacing: '0.2em', textTransform: 'uppercase', fontFamily: 'var(--font-sans)' }}>Scroll</span>
+          <div style={{ width: 1, height: 36, background: 'linear-gradient(to bottom, var(--text-dim), transparent)' }} />
+        </div>
+      </section>
+
+      {/*  TRUST STRIP  */}
+      <div style={{ background: 'var(--bg-card)', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)', padding: '22px 40px' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-around', flexWrap: 'wrap', gap: 20 }}>
+          {[
+            { icon: '', text: '5-Star Rated', sub: 'on Google' },
+            { icon: '', text: '100+ Homes', sub: 'in Omaha area' },
+            { icon: '', text: 'Fully Insured', sub: '& warranted' },
+            { icon: '', text: 'Half-Day Install', sub: 'in & out fast' },
+            { icon: '', text: 'App Controlled', sub: 'from anywhere' },
+          ].map(({ icon, text, sub }) => (
+            <div key={text} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px' }}>
+              <span style={{ fontSize: '1.4rem' }}>{icon}</span>
+              <div>
+                <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-white)' }}>{text}</div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-mid)' }}>{sub}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/*  ABOUT  */}
+      <section id="about" className="section">
+        <div className="section-inner">
+          <div className="two-col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 72, alignItems: 'center' }}>
+            <div>
+              <div className="fi section-label">What We Do</div>
+              <h2 className="fi fi-delay-1 section-title">Permanent Lights.<br /><em>Zero Hassle.</em></h2>
+              <p className="fi fi-delay-2 section-lead">We install Govee permanent outdoor lighting systems that stay on your home year-round. No more hiring someone every November, no more tangled boxes in the garage — just beautiful, app-controlled light at the tap of a button.</p>
+              <ul className="fi fi-delay-3" style={{ listStyle: 'none', marginTop: 32, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {[
+                  { title: 'App-Controlled Colors', desc: '16M+ colors and dozens of scenes — change your lights to match any holiday or mood in seconds.' },
+                  { title: 'Clean, Permanent Install', desc: 'Mounted with brackets built to withstand Nebraska weather, flush to your roofline. Barely visible by day, stunning at night.' },
+                  { title: 'Built for Nebraska Winters', desc: 'IP67 weatherproof — reliable through every Omaha season, rain, snow, or ice.' },
+                  { title: 'Smart Home Ready', desc: 'Works with Alexa, Google Home, and Apple HomeKit for voice control and automation.' },
+                ].map(({ title, desc }) => (
+                  <li key={title} style={{ display: 'flex', gap: 14, alignItems: 'flex-start', padding: '14px 18px', borderRadius: 'var(--radius-sm)', background: 'rgba(10,30,61,0.5)', border: '1px solid var(--border)', transition: 'var(--transition)' }}>
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--accent)', flexShrink: 0, marginTop: 8, boxShadow: '0 0 8px var(--accent)' }} />
+                    <div>
+                      <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, color: 'var(--text-white)', marginBottom: 3, fontSize: '0.95rem' }}>{title}</div>
+                      <div style={{ fontSize: '0.87rem', color: 'var(--text-mid)', lineHeight: 1.55 }}>{desc}</div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <div className="fi fi-delay-4" style={{ marginTop: 32 }}>
+                <button className="btn btn-primary" onClick={() => scrollTo('booking')}>Get My Free Quote →</button>
+              </div>
+            </div>
+            <div className="fi fi-delay-2" style={{ position: 'relative', borderRadius: 'var(--radius-lg)', overflow: 'hidden', border: '1px solid var(--border)', aspectRatio: '4/3', background: 'var(--bg-card)' }}>
+              <img src="/images/IMG_7323.jpeg" alt="Ashton Holiday Lighting install" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(3,6,15,0.6) 0%, transparent 50%)' }} />
+              <div style={{ position: 'absolute', bottom: 20, left: 20, right: 20 }}>
+                <div style={{ background: 'rgba(3,6,15,0.85)', backdropFilter: 'blur(10px)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#06d6a0', boxShadow: '0 0 10px #06d6a0', flexShrink: 0, animation: 'glow-pulse 2s ease-in-out infinite' }} />
+                  <span style={{ fontFamily: 'var(--font-sans)', fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-white)' }}>Real Omaha install — half-day completion</span>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/*  STATS  */}
+      <div style={{ background: 'var(--bg-card)', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)', padding: '60px 40px' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+          <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 24 }}>
+            {[
+              { num: '16M+', label: 'Colors Available', sub: 'via Govee RGBIC' },
+              { num: '$1K', label: 'Installs Start At', sub: 'free quote included' },
+              { num: '½ Day', label: 'Typical Install', sub: 'in & out fast' },
+              { num: '50%', label: 'Off Installation', sub: 'limited time offer' },
+            ].map(({ num, label, sub }) => (
+              <div key={label} className="fi card" style={{ padding: '28px 24px', textAlign: 'center' }}>
+                <div style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(2rem,3.5vw,2.8rem)', fontWeight: 900, color: 'var(--accent2)', lineHeight: 1, marginBottom: 8 }}>{num}</div>
+                <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-white)', marginBottom: 4 }}>{label}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-mid)' }}>{sub}</div>
               </div>
             ))}
           </div>
         </div>
       </div>
-    </section>
-  )
-}
 
-// ─── Booking ──────────────────────────────────────────────────────────────────
-function Booking() {
-  const [form, setForm] = useState({ name: '', email: '', phone: '', address: '', size: '', message: '' })
-  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); setStatus('sending')
-    try {
-      const res = await fetch('/.netlify/functions/contact', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form)
-      })
-      if (res.ok) { setStatus('sent'); setForm({ name: '', email: '', phone: '', address: '', size: '', message: '' }) }
-      else setStatus('error')
-    } catch { setStatus('error') }
-  }
-
-  return (
-    <section id="book" style={{background:'var(--surface-2)', padding:'110px 48px'}}>
-      <div style={{maxWidth:'var(--inner-max)', margin:'0 auto'}}>
-        <div style={{textAlign:'center', marginBottom:64}}>
-          <div className="eyebrow center fi">Get Started</div>
-          <h2 className="section-title fi d1">Book your free<br/><em>consultation.</em></h2>
-          <p className="section-lead fi d2" style={{margin:'0 auto', textAlign:'center'}}>
-            No pressure, no obligation. We will visit your home, measure the roofline, and give you an exact quote.
-          </p>
+      {/*  GOVEE TECH  */}
+      <section style={{ padding: '110px 40px', background: 'var(--bg-dark)' }}>
+        <div className="section-inner">
+          <div style={{ textAlign: 'center', marginBottom: 60 }}>
+            <div className="fi section-label" style={{ justifyContent: 'center' }}>The Technology</div>
+            <h2 className="fi fi-delay-1 section-title" style={{ textAlign: 'center' }}>Why <em>Govee</em> Permanent Lights?</h2>
+            <p className="fi fi-delay-2 section-lead" style={{ margin: '0 auto', textAlign: 'center' }}>Govee is the industry leader in smart permanent outdoor lighting — and we're Omaha's trusted installer.</p>
+          </div>
+          <div className="three-col" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 20 }}>
+            {GOVEE_CARDS.map((card, i) => (
+              <div key={card.title} className={`fi fi-delay-${Math.min(i + 1, 5)} card`} style={{ padding: '28px 24px' }}>
+                <div style={{ width: 36, height: 36, borderRadius: 8, background: 'rgba(0,212,255,0.08)', border: '1px solid rgba(0,212,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}><div style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--accent)', boxShadow: '0 0 8px var(--accent)' }} /></div>
+                <h3 style={{ fontFamily: 'var(--font-sans)', fontSize: '1rem', fontWeight: 700, color: 'var(--text-white)', marginBottom: 10 }}>{card.title}</h3>
+                <p style={{ fontSize: '0.87rem', color: 'var(--text-mid)', lineHeight: 1.65 }}>{card.body}</p>
+              </div>
+            ))}
+          </div>
         </div>
-        <div style={{display:'grid', gridTemplateColumns:'1.2fr 0.8fr', gap:48, alignItems:'start'}}>
-          <div className="fi">
-            <div style={{background:'var(--surface-3)', border:'1px solid var(--border)', borderRadius:'var(--r-lg)', overflow:'hidden'}}>
-              <div style={{
-                padding:'18px 24px', borderBottom:'1px solid var(--border)',
-                display:'flex', alignItems:'center', gap:10
-              }}>
-                <div style={{
-                  width:32, height:32, borderRadius:'var(--r-sm)',
-                  background:'var(--gold-glow)', border:'1px solid var(--border-gold)',
-                  display:'flex', alignItems:'center', justifyContent:'center'
-                }}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="1.5" style={{width:16,height:16}}>
-                    <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
-                    <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-                  </svg>
+      </section>
+
+      {/*  GALLERY  */}
+      <section id="gallery" className="section">
+        <div className="section-inner">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 50, flexWrap: 'wrap', gap: 20 }}>
+            <div>
+              <div className="fi section-label">Our Work</div>
+              <h2 className="fi fi-delay-1 section-title">Omaha Homes, <em>Transformed</em></h2>
+              <p className="fi fi-delay-2 section-lead">Every install is custom-planned to complement your home's roofline and architecture.</p>
+            </div>
+            <button className="fi fi-delay-3 btn btn-outline btn-sm" onClick={() => scrollTo('booking')}>Get This For Your Home →</button>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14 }}>
+            {[
+              { src: '/images/IMG_7323.jpeg', span: true },
+              { src: '/images/IMG_6879.jpeg' },
+              { src: '/images/IMG_6792.jpeg' },
+              { src: '/images/IMG_6807.jpeg' },
+              { src: '/images/IMG_6874.jpeg' },
+            ].map(({ src, span }, i) => (
+              <div key={src} className={`fi fi-delay-${Math.min(i + 1, 5)} gallery-item`} style={{ gridColumn: span ? 'span 2' : 'span 1', borderRadius: 'var(--radius-md)', overflow: 'hidden', aspectRatio: '16/10', border: '1px solid var(--border)', position: 'relative', cursor: 'pointer', transition: 'var(--transition)' }}>
+                <img src={src} alt="Ashton Holiday Lighting install" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform 0.5s' }} />
+                <div className="gallery-overlay" style={{ position: 'absolute', inset: 0, background: 'rgba(0,212,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 0.28s' }}>
+                  <div style={{ background: 'rgba(3,6,15,0.85)', backdropFilter: 'blur(10px)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '10px 20px', fontFamily: 'var(--font-sans)', fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-white)' }}>View Full Size</div>
                 </div>
-                <span style={{fontWeight:600, color:'var(--cream)', fontSize:'0.95rem'}}>Schedule a Consultation</span>
+              </div>
+            ))}
+          </div>
+          <div className="fi" style={{ textAlign: 'center', marginTop: 40 }}>
+            <button className="btn btn-primary" onClick={() => scrollTo('visualizer')}> See What Your Home Would Look Like →</button>
+          </div>
+        </div>
+      </section>
+
+      {/*  AI VISUALIZER  */}
+      <section id="visualizer" style={{ padding: '110px 40px', background: 'linear-gradient(180deg, var(--bg-dark) 0%, var(--bg-deep) 100%)' }}>
+        <div className="section-inner">
+          <div style={{ textAlign: 'center', marginBottom: 56 }}>
+            <div className="fi section-label" style={{ justifyContent: 'center' }}>AI-Powered</div>
+            <h2 className="fi fi-delay-1 section-title" style={{ textAlign: 'center' }}>See Your Home <em>Transformed</em></h2>
+            <p className="fi fi-delay-2 section-lead" style={{ margin: '0 auto 16px', textAlign: 'center' }}>Upload a photo of your home and our AI will generate a realistic preview of what it would look like with permanent holiday lights installed — before you spend a single dollar.</p>
+            <div className="fi fi-delay-3" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.3)', borderRadius: 100, padding: '6px 18px', marginBottom: 40 }}>
+              <span style={{ fontSize: '0.8rem' }}></span>
+              <span style={{ fontFamily: 'var(--font-sans)', fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.1em', color: '#a78bfa' }}>Powered by Advanced AI Image Generation</span>
+            </div>
+          </div>
+          <div className="fi fi-delay-2" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '40px', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg,#7c3aed,var(--accent),var(--accent2))' }} />
+            <AIVisualizer />
+          </div>
+          <div className="fi three-col" style={{ marginTop: 32, display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 20 }}>
+            {[
+              { title: 'Private & Secure', desc: 'Your photos are processed securely and never stored or shared.' },
+              { title: 'Results in ~20 Seconds', desc: 'Our AI analyzes your roofline and generates a realistic preview fast.' },
+              { title: 'Completely Free', desc: 'No sign-up required. Just upload and see your home transformed.' },
+            ].map(({ title, desc }) => (
+              <div key={title} style={{ textAlign: 'center', padding: '20px 16px' }}>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#a78bfa', boxShadow: '0 0 8px #a78bfa', margin: '0 auto 12px' }} />
+                <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-white)', marginBottom: 6 }}>{title}</div>
+                <div style={{ fontSize: '0.82rem', color: 'var(--text-mid)', lineHeight: 1.6 }}>{desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/*  PROCESS  */}
+      <section style={{ padding: '110px 40px', background: 'var(--bg-card)', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
+        <div className="section-inner">
+          <div style={{ textAlign: 'center', marginBottom: 60 }}>
+            <div className="fi section-label" style={{ justifyContent: 'center' }}>How It Works</div>
+            <h2 className="fi fi-delay-1 section-title" style={{ textAlign: 'center' }}>From Call to <em>Lit Up</em> in Days</h2>
+          </div>
+          <div className="process-steps" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 24 }}>
+            {PROCESS_STEPS.map((step, i) => (
+              <div key={step.num} className={`fi fi-delay-${i + 1}`} style={{ textAlign: 'center', padding: '32px 20px' }}>
+                <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--bg-card2)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', boxShadow: '0 0 20px rgba(0,212,255,0.1)' }}>
+                  <span style={{ fontFamily: 'var(--font-serif)', fontSize: '1.1rem', fontWeight: 700, color: 'var(--accent)' }}>{step.num}</span>
+                </div>
+                <h3 style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '1rem', color: 'var(--text-white)', marginBottom: 10 }}>{step.title}</h3>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-mid)', lineHeight: 1.65 }}>{step.desc}</p>
+              </div>
+            ))}
+          </div>
+          <div className="fi" style={{ textAlign: 'center', marginTop: 48 }}>
+            <button className="btn btn-gold" onClick={() => scrollTo('booking')} style={{ fontSize: '1rem', padding: '18px 44px' }}>
+              Start Step 1 — Book Free Consult
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/*  PRICING  */}
+      <section id="pricing" className="section">
+        <div className="section-inner">
+          <div style={{ textAlign: 'center', marginBottom: 56 }}>
+            <div className="fi section-label" style={{ justifyContent: 'center' }}>Transparent Pricing</div>
+            <h2 className="fi fi-delay-1 section-title" style={{ textAlign: 'center' }}>Simple, <em>Honest Pricing</em></h2>
+            <p className="fi fi-delay-2 section-lead" style={{ margin: '0 auto', textAlign: 'center' }}>No hidden fees. No surprise charges. Every install includes a free on-site consultation and custom quote.</p>
+          </div>
+          <div className="three-col" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 24, alignItems: 'start' }}>
+            {PRICING_TIERS.map((tier, i) => (
+              <div key={tier.name} className={`fi fi-delay-${i + 1} card${tier.featured ? ' pricing-card-featured' : ''}`} style={{ padding: '36px 28px', position: 'relative' }}>
+                {tier.featured && <div style={{ position: 'absolute', top: -1, left: '50%', transform: 'translateX(-50%)', background: 'linear-gradient(135deg,var(--accent),#0090c0)', color: '#020b18', fontSize: '0.65rem', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', padding: '5px 16px', borderRadius: '0 0 8px 8px', fontFamily: 'var(--font-sans)', whiteSpace: 'nowrap' }}>Most Popular</div>}
+                <h3 style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '0.9rem', color: tier.featured ? 'var(--accent)' : 'var(--text-mid)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>{tier.name}</h3>
+                <div style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(1.3rem,2vw,1.6rem)', fontWeight: 700, color: 'var(--accent2)', marginBottom: 6 }}>{tier.startingAt}</div>
+                <p style={{ fontSize: '0.82rem', color: 'var(--text-mid)', marginBottom: 24, lineHeight: 1.5 }}>{tier.desc}</p>
+                <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 28 }}>
+                  {tier.features.map(f => (
+                    <li key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.85rem', color: 'var(--text-mid)' }}>
+                      <span style={{ color: 'var(--accent)', fontWeight: 700, flexShrink: 0 }}></span>{f}
+                    </li>
+                  ))}
+                </ul>
+                <button className={`btn ${tier.featured ? 'btn-primary' : 'btn-outline'} btn-sm`} style={{ width: '100%' }} onClick={() => scrollTo('booking')}>
+                  Get Free Quote
+                </button>
+              </div>
+            ))}
+          </div>
+          <div className="fi" style={{ marginTop: 32, textAlign: 'center', padding: '20px', background: 'rgba(245,200,66,0.06)', border: '1px solid rgba(245,200,66,0.2)', borderRadius: 'var(--radius-md)' }}>
+            <p style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, color: 'var(--accent2)', marginBottom: 4 }}> Sale Active: 50% Off Installation</p>
+            <p style={{ fontSize: '0.88rem', color: 'var(--text-mid)' }}>Book your free consultation before the sale ends to lock in this price. Hardware costs remain the same.</p>
+          </div>
+        </div>
+      </section>
+
+      {/*  FAQ  */}
+      <section id="faq" className="section">
+        <div className="section-inner">
+          <div className="two-col" style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 72, alignItems: 'start' }}>
+            <div>
+              <div className="fi section-label">FAQ</div>
+              <h2 className="fi fi-delay-1 section-title">Frequently Asked <em>Questions</em></h2>
+              <p className="fi fi-delay-2 section-lead">Everything you need to know before booking. Still have questions? Call us directly.</p>
+              <div className="fi fi-delay-3" style={{ marginTop: 32, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <a href="tel:4028898640" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', textDecoration: 'none', transition: 'var(--transition)' }}>
+                  <span style={{ fontSize: '1.4rem' }}></span>
+                  <div>
+                    <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-white)' }}>Call Us Directly</div>
+                    <div style={{ fontSize: '0.82rem', color: 'var(--accent)' }}>(402) 889-8640</div>
+                  </div>
+                </a>
+                <button style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', cursor: 'pointer', transition: 'var(--transition)', textAlign: 'left' }} onClick={() => scrollTo('booking')}>
+                  <span style={{ fontSize: '1.4rem' }}></span>
+                  <div>
+                    <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-white)' }}>Book Free Consult</div>
+                    <div style={{ fontSize: '0.82rem', color: 'var(--accent)' }}>20–30 min, no obligation</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+            <div className="fi fi-delay-2">
+              {FAQS.map((faq, i) => <FaqRow key={i} faq={faq} index={i} open={openFaq === i} onToggle={i => setOpenFaq(openFaq === i ? null : i)} />)}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/*  BOOKING  */}
+      <section id="booking" style={{ padding: '110px 40px', background: 'linear-gradient(180deg, var(--bg-dark) 0%, var(--bg-deep) 100%)' }}>
+        <div className="section-inner">
+          <div style={{ textAlign: 'center', marginBottom: 56 }}>
+            <div className="fi section-label" style={{ justifyContent: 'center' }}>Get Started</div>
+            <h2 className="fi fi-delay-1 section-title" style={{ textAlign: 'center' }}>Book Your Free <em>Consultation</em></h2>
+            <p className="fi fi-delay-2 section-lead" style={{ margin: '0 auto', textAlign: 'center' }}>We'll visit your home, measure your roofline, and give you a no-obligation quote — all for free. Most installs are done in half a day.</p>
+          </div>
+          <div className="two-col-booking" style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 48, alignItems: 'start' }}>
+            <div className="fi card" style={{ overflow: 'hidden', position: 'relative' }}>
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg,var(--accent),var(--accent2))' }} />
+              <div style={{ padding: '20px 24px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+                <div>
+                  <h3 style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '1rem', color: 'var(--text-white)', marginBottom: 4 }}>Schedule a Consultation</h3>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-mid)' }}>Pick a date and time that works for you.</p>
+                </div>
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                  {[' Free', ' No Obligation', ' 20–30 min'].map(t => <span key={t} style={{ fontSize: '0.72rem', color: 'var(--text-mid)', fontFamily: 'var(--font-sans)', fontWeight: 600 }}>{t}</span>)}
+                </div>
               </div>
               <iframe
-                src="https://api.leadconnectorhq.com/widget/booking/hFpMPHuJqHAMBNFBhGkW"
-                style={{width:'100%', height:680, border:'none'}}
-                title="Book a consultation"
+                src={`https://api.leadconnectorhq.com/widget/booking/${GHL_CALENDAR_ID}`}
+                style={{ width: '100%', height: 680, border: 'none', display: 'block', marginTop: 8 }}
+                title="Schedule Consultation"
                 loading="lazy"
               />
             </div>
-          </div>
-
-          <div className="fi d1">
-            <div style={{background:'var(--surface-3)', border:'1px solid var(--border)', borderRadius:'var(--r-lg)', padding:'32px 28px'}}>
-              <h3 style={{fontFamily:'var(--font-display)', fontSize:'1.4rem', fontWeight:700, color:'var(--cream)', marginBottom:6}}>
-                Send a Message
-              </h3>
-              <p style={{fontSize:'0.84rem', color:'var(--cream-dim)', marginBottom:24}}>
-                Prefer to reach out directly? Fill this out and we will respond within 24 hours.
-              </p>
-              {status === 'sent' ? (
-                <div style={{background:'rgba(26,122,74,0.1)', border:'1px solid rgba(26,122,74,0.25)', borderRadius:'var(--r-md)', padding:'20px', textAlign:'center'}}>
-                  <p style={{color:'#2ecc71', fontWeight:600, marginBottom:6}}>Message received.</p>
-                  <p style={{fontSize:'0.84rem', color:'var(--cream-dim)'}}>We will be in touch within 24 hours.</p>
-                </div>
-              ) : (
-                <form onSubmit={handleSubmit} style={{display:'flex', flexDirection:'column', gap:14}}>
-                  <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:12}}>
-                    <div className="form-group">
-                      <label className="form-label">Name</label>
-                      <input className="form-input" required placeholder="Jane Smith" value={form.name} onChange={e => setForm(f => ({...f, name: e.target.value}))}/>
+            <div className="fi fi-delay-2" style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+              <div className="card" style={{ padding: '28px', position: 'relative' }}>
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg,var(--accent2),var(--accent))' }} />
+                <h3 style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '1rem', color: 'var(--text-white)', marginBottom: 6 }}>Or Send Us a Message</h3>
+                <p style={{ fontSize: '0.82rem', color: 'var(--text-mid)', marginBottom: 20 }}>We respond within 1 business day.</p>
+                {formStatus === 'success' ? (
+                  <div style={{ background: 'rgba(0,212,255,0.08)', border: '1px solid rgba(0,212,255,0.3)', borderRadius: 'var(--radius-sm)', padding: 24, textAlign: 'center' }}>
+                    <div style={{ fontSize: '2.5rem', marginBottom: 12 }}></div>
+                    <p style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, color: 'var(--accent)', marginBottom: 8 }}>Message Received!</p>
+                    <p style={{ fontSize: '0.88rem', color: 'var(--text-mid)', lineHeight: 1.6 }}>We'll be in touch within 1 business day. In the meantime, feel free to call us at (402) 889-8640.</p>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    <div className="form-row-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                      <div className="form-group"><label className="form-label">First Name *</label><input className="form-input" placeholder="John" value={formState.first} onChange={inp('first')} /></div>
+                      <div className="form-group"><label className="form-label">Last Name</label><input className="form-input" placeholder="Smith" value={formState.last} onChange={inp('last')} /></div>
                     </div>
+                    <div className="form-group"><label className="form-label">Email *</label><input className="form-input" type="email" placeholder="john@email.com" value={formState.email} onChange={inp('email')} /></div>
+                    <div className="form-group"><label className="form-label">Phone</label><input className="form-input" type="tel" placeholder="(402) 555-0000" value={formState.phone} onChange={inp('phone')} /></div>
                     <div className="form-group">
-                      <label className="form-label">Phone</label>
-                      <input className="form-input" placeholder="(402) 555-0100" value={form.phone} onChange={e => setForm(f => ({...f, phone: e.target.value}))}/>
+                      <label className="form-label">I'm Interested In</label>
+                      <select className="form-input" value={formState.interest} onChange={inp('interest')}>
+                        <option>Permanent Holiday Lights (Govee)</option>
+                        <option>Free Consultation & Quote</option>
+                        <option>Pricing Information</option>
+                        <option>AI Visualizer Demo</option>
+                        <option>Other</option>
+                      </select>
                     </div>
+                    <div className="form-group"><label className="form-label">Message (Optional)</label><textarea className="form-input" rows={3} placeholder="Tell us about your home, roofline, or any questions..." value={formState.message} onChange={inp('message')} style={{ resize: 'vertical' }} /></div>
+                    {formError && <p style={{ fontSize: '0.82rem', color: '#ff6b6b', padding: '8px 12px', background: 'rgba(255,107,107,0.08)', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(255,107,107,0.2)' }}>{formError}</p>}
+                    <button className="btn btn-primary" style={{ width: '100%', padding: '14px' }} onClick={handleSubmit} disabled={formStatus === 'sending'}>
+                      {formStatus === 'sending' ? 'Sending...' : 'Send Message →'}
+                    </button>
+                    <p style={{ fontSize: '0.72rem', color: 'var(--text-dim)', textAlign: 'center' }}>We respond within 1 business day. Installs start at $800.</p>
                   </div>
-                  <div className="form-group">
-                    <label className="form-label">Email</label>
-                    <input className="form-input" type="email" required placeholder="jane@example.com" value={form.email} onChange={e => setForm(f => ({...f, email: e.target.value}))}/>
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Home Address</label>
-                    <input className="form-input" placeholder="123 Main St, Omaha, NE" value={form.address} onChange={e => setForm(f => ({...f, address: e.target.value}))}/>
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Home Size</label>
-                    <select className="form-input" value={form.size} onChange={e => setForm(f => ({...f, size: e.target.value}))}>
-                      <option value="">Select approximate size</option>
-                      <option value="small">Small (under 1,500 sq ft)</option>
-                      <option value="medium">Medium (1,500-2,500 sq ft)</option>
-                      <option value="large">Large (2,500-4,000 sq ft)</option>
-                      <option value="estate">Estate (4,000+ sq ft)</option>
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Message (optional)</label>
-                    <textarea className="form-input" rows={3} placeholder="Any questions or special requests..." value={form.message} onChange={e => setForm(f => ({...f, message: e.target.value}))} style={{resize:'vertical'}}/>
-                  </div>
-                  {status === 'error' && <p style={{fontSize:'0.82rem', color:'#e74c3c'}}>Something went wrong. Please try again or call us directly.</p>}
-                  <button className="btn btn-primary" type="submit" disabled={status === 'sending'} style={{justifyContent:'center', padding:'14px'}}>
-                    {status === 'sending' ? 'Sending...' : 'Send Message'}
-                  </button>
-                </form>
-              )}
-            </div>
-
-            <div style={{marginTop:18, display:'flex', flexDirection:'column', gap:0}}>
-              {[
-                {label:'Phone / Text', value:'(402) 555-0100'},
-                {label:'Email', value:'info@ashtonholidaylighting.com'},
-                {label:'Service Area', value:'Omaha Metro and Surrounding'},
-              ].map(c => (
-                <div key={c.label} style={{display:'flex', justifyContent:'space-between', padding:'11px 0', borderBottom:'1px solid var(--border)'}}>
-                  <span style={{fontSize:'0.75rem', color:'var(--cream-dim)', fontFamily:'var(--font-mono)', letterSpacing:'0.06em'}}>{c.label}</span>
-                  <span style={{fontSize:'0.84rem', color:'var(--cream)', fontWeight:500}}>{c.value}</span>
-                </div>
-              ))}
+                )}
+              </div>
+              <div style={{ marginTop: 20, background: 'rgba(197,48,48,0.12)', border: '1px solid rgba(197,48,48,0.3)', borderRadius: 'var(--radius-md)', padding: '20px 22px' }}>
+                <p style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, fontSize: '0.88rem', color: '#fc8181', marginBottom: 10 }}>⏰ Sale Ends In:</p>
+                <CountdownTimer />
+                <p style={{ fontSize: '0.78rem', color: 'var(--text-mid)', marginTop: 10, lineHeight: 1.5 }}>Book before the timer hits zero to lock in <strong style={{ color: 'var(--accent2)' }}>50% off installation</strong>.</p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </section>
-  )
-}
+      </section>
 
-// ─── AI Showcase ──────────────────────────────────────────────────────────────
-function AIShowcase() {
-  const stack = [
-    { name: 'Nano Banana Pro', detail: 'Gemini 3 Pro Image — photorealistic house visualization', status: 'Live' },
-    { name: 'GoHighLevel CRM', detail: 'Automated lead capture, follow-up, and consultation booking', status: 'Live' },
-    { name: 'Netlify Edge Functions', detail: 'Serverless AI processing — zero cold start latency', status: 'Live' },
-    { name: 'Govee Smart API', detail: 'Real-time lighting control and scene management', status: 'Live' },
-    { name: 'React + TypeScript', detail: 'Modern component-based frontend architecture', status: 'Live' },
-  ]
-  return (
-    <section id="ai-showcase" style={{background:'var(--ink-mid)', borderTop:'1px solid var(--border)', padding:'110px 48px'}}>
-      <div style={{maxWidth:'var(--inner-max)', margin:'0 auto'}}>
-        <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:80, alignItems:'center'}}>
-          <div>
-            <div className="eyebrow fi">Powered by AI</div>
-            <h2 className="section-title fi d1">This website is a<br/><em>live AI demo.</em></h2>
-            <p className="section-lead fi d2" style={{marginBottom:24}}>
-              Ashton Holiday Lighting is built on the same AI-integration stack we deploy for our clients. Every feature on this site demonstrates what is possible when you combine modern AI with smart business automation.
-            </p>
-            <p className="section-lead fi d3" style={{fontSize:'0.95rem', marginBottom:36}}>
-              This site was designed and built entirely by AI — proof that AI can outperform traditional web agencies on speed, quality, and conversion optimization. It serves as a live portfolio piece for AI integration consulting.
-            </p>
-            <div className="fi d4">
-              <a href="mailto:info@ashtonholidaylighting.com" className="btn btn-outline" style={{fontSize:'0.85rem', gap:8}}>
-                Inquire About AI Integration <ArrowRight/>
+      {/*  AI COMPANY SHOWCASE  */}
+      <section style={{ padding: '90px 40px', background: 'linear-gradient(135deg, rgba(124,58,237,0.08) 0%, rgba(0,212,255,0.05) 100%)', borderTop: '1px solid rgba(124,58,237,0.15)' }}>
+        <div className="section-inner">
+          <div className="two-col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, alignItems: 'center' }}>
+            <div>
+              <div className="fi" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.3)', borderRadius: 100, padding: '6px 18px', marginBottom: 20 }}>
+                <span style={{ fontSize: '0.8rem' }}></span>
+                <span style={{ fontFamily: 'var(--font-sans)', fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#a78bfa' }}>AI Integration Showcase</span>
+              </div>
+              <h2 className="fi fi-delay-1 section-title">This Website is <em style={{ color: '#a78bfa' }}>Powered by AI</em></h2>
+              <p className="fi fi-delay-2 section-lead">Every element of this website — from the AI House Visualizer to the automated lead workflows — was built and optimized using cutting-edge artificial intelligence.</p>
+              <div className="fi fi-delay-3" style={{ marginTop: 28, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {[
+                  { icon: '', text: 'AI-generated house visualization previews' },
+                  { icon: '', text: 'Automated CRM and lead routing via GoHighLevel' },
+                  { icon: '', text: 'Conversion-optimized layout built with AI assistance' },
+                  { icon: '', text: 'Smart contact workflows and follow-up automation' },
+                ].map(({ icon, text }) => (
+                  <div key={text} style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: '0.88rem', color: 'var(--text-mid)' }}>
+                    <span style={{ fontSize: '1.1rem' }}>{icon}</span>{text}
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="fi fi-delay-2" style={{ background: 'var(--bg-card)', border: '1px solid rgba(124,58,237,0.2)', borderRadius: 'var(--radius-lg)', padding: '36px', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg,#7c3aed,var(--accent),var(--accent2))' }} />
+              <div style={{ fontFamily: 'var(--font-sans)', fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#a78bfa', marginBottom: 20 }}>AI Stack</div>
+              {[
+                { label: 'House Visualizer', tech: 'GPT-4o Vision + DALL·E 3', status: 'Live' },
+                { label: 'Lead Automation', tech: 'GoHighLevel + AI Workflows', status: 'Live' },
+                { label: 'Conversion Copy', tech: 'AI-Optimized Messaging', status: 'Live' },
+                { label: 'Smart Scheduling', tech: 'GHL Calendar Integration', status: 'Live' },
+              ].map(({ label, tech, status }) => (
+                <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid var(--border)' }}>
+                  <div>
+                    <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: '0.88rem', color: 'var(--text-white)' }}>{label}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-mid)' }}>{tech}</div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(6,214,160,0.1)', border: '1px solid rgba(6,214,160,0.25)', borderRadius: 100, padding: '3px 10px' }}>
+                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#06d6a0', boxShadow: '0 0 6px #06d6a0' }} />
+                    <span style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.1em', color: '#06d6a0' }}>{status}</span>
+                  </div>
+                </div>
+              ))}
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-dim)', marginTop: 20, lineHeight: 1.6 }}>Interested in AI integration for your business? This site is a live demonstration of what's possible.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/*  FOOTER  */}
+      <footer style={{ background: '#010810', borderTop: '1px solid var(--border)', padding: '52px 40px 28px' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+          <div className="footer-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 48, paddingBottom: 40, borderBottom: '1px solid var(--border)' }}>
+            <div>
+              <div style={{ fontFamily: 'var(--font-serif)', fontSize: '1.05rem', fontWeight: 700, color: 'var(--accent2)', marginBottom: 12 }}>Ashton Holiday Lighting</div>
+              <p style={{ fontSize: '0.87rem', color: 'var(--text-mid)', lineHeight: 1.7, maxWidth: 280, marginBottom: 20 }}>Omaha's premier permanent outdoor lighting installer. Govee-certified. Locally owned and operated.</p>
+              <a href="tel:4028898640" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--text-mid)', textDecoration: 'none', fontSize: '0.87rem', padding: '8px 14px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', transition: 'var(--transition)' }}>
+                 (402) 889-8640
               </a>
             </div>
-          </div>
-
-          <div className="fi d2">
-            <div style={{background:'var(--surface-3)', border:'1px solid var(--border)', borderRadius:'var(--r-lg)', padding:'28px'}}>
-              <div style={{display:'flex', alignItems:'center', gap:10, marginBottom:24, paddingBottom:18, borderBottom:'1px solid var(--border)'}}>
-                <div style={{
-                  width:36, height:36, borderRadius:'var(--r-sm)',
-                  background:'var(--gold-glow)', border:'1px solid var(--border-gold)',
-                  display:'flex', alignItems:'center', justifyContent:'center', color:'var(--gold)'
-                }}>
-                  <CpuIcon/>
-                </div>
-                <div>
-                  <div style={{fontWeight:700, fontSize:'0.95rem', color:'var(--cream)'}}>Live Tech Stack</div>
-                  <div style={{fontSize:'0.72rem', color:'var(--cream-dim)'}}>All systems operational</div>
-                </div>
-                <div style={{
-                  marginLeft:'auto', display:'flex', alignItems:'center', gap:6,
-                  background:'rgba(26,122,74,0.1)', border:'1px solid rgba(26,122,74,0.25)',
-                  borderRadius:100, padding:'4px 12px'
-                }}>
-                  <div style={{width:6, height:6, borderRadius:'50%', background:'#2ecc71', animation:'pulse-green 2s ease-in-out infinite'}}/>
-                  <span style={{fontFamily:'var(--font-mono)', fontSize:'0.58rem', fontWeight:700, letterSpacing:'0.1em', color:'#2ecc71'}}>ALL SYSTEMS GO</span>
-                </div>
-              </div>
-              {stack.map(item => (
-                <div key={item.name} style={{display:'flex', justifyContent:'space-between', alignItems:'center', padding:'13px 0', borderBottom:'1px solid var(--border)'}}>
-                  <div>
-                    <div style={{fontWeight:600, fontSize:'0.9rem', color:'var(--cream)'}}>{item.name}</div>
-                    <div style={{fontSize:'0.72rem', color:'var(--cream-dim)', marginTop:2}}>{item.detail}</div>
-                  </div>
-                  <div style={{
-                    display:'flex', alignItems:'center', gap:5,
-                    background:'rgba(26,122,74,0.1)', border:'1px solid rgba(26,122,74,0.25)',
-                    borderRadius:100, padding:'3px 10px', flexShrink:0, marginLeft:16
-                  }}>
-                    <div style={{width:5, height:5, borderRadius:'50%', background:'#2ecc71'}}/>
-                    <span style={{fontFamily:'var(--font-mono)', fontSize:'0.56rem', fontWeight:700, letterSpacing:'0.1em', color:'#2ecc71'}}>{item.status}</span>
-                  </div>
-                </div>
-              ))}
+            <div>
+              <div style={{ fontFamily: 'var(--font-sans)', fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: 16 }}>Quick Links</div>
+              <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {[['About', 'about'], ['Gallery', 'gallery'], ['Pricing', 'pricing'], ['FAQ', 'faq'], ['Book Now', 'booking']].map(([label, id]) => (
+                  <li key={id}><a style={{ color: 'var(--text-mid)', textDecoration: 'none', fontSize: '0.87rem', cursor: 'pointer', transition: 'color 0.2s' }} onClick={() => scrollTo(id)}>{label}</a></li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <div style={{ fontFamily: 'var(--font-sans)', fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: 16 }}>Service Area</div>
+              <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {['Omaha, NE', 'West Omaha', 'Elkhorn', 'Papillion', 'Millard', 'Bellevue'].map(city => (
+                  <li key={city} style={{ fontSize: '0.87rem', color: 'var(--text-mid)' }}>{city}</li>
+                ))}
+              </ul>
             </div>
           </div>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// ─── Footer ───────────────────────────────────────────────────────────────────
-function Footer({ onBook }: { onBook: () => void }) {
-  const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  return (
-    <footer className="footer">
-      <div className="footer-inner">
-        <div className="footer-grid">
-          <div>
-            <div className="footer-brand">Ashton Holiday Lighting</div>
-            <p style={{fontSize:'0.875rem', color:'var(--cream-dim)', lineHeight:1.75, maxWidth:320, marginBottom:24}}>
-              Omaha permanent holiday lighting specialists. Commercial-grade Govee LED systems installed once, controlled forever.
-            </p>
-            <button className="btn btn-primary" style={{fontSize:'0.82rem', padding:'11px 24px'}} onClick={onBook}>
-              Book Free Consultation
-            </button>
-          </div>
-          <div>
-            <div className="footer-col-label">Navigation</div>
-            <div className="footer-links">
-              {['services', 'gallery', 'pricing', 'ai-visualizer', 'faq', 'book'].map(id => (
-                <span key={id} className="footer-link" onClick={() => scrollTo(id)} style={{textTransform:'capitalize'}}>
-                  {id.replace('-', ' ')}
-                </span>
-              ))}
-            </div>
-          </div>
-          <div>
-            <div className="footer-col-label">Contact</div>
-            <div className="footer-links">
-              <span className="footer-link">(402) 555-0100</span>
-              <span className="footer-link">info@ashtonholidaylighting.com</span>
-              <span className="footer-link">Omaha, Nebraska</span>
-              <span className="footer-link">Serving the Metro Area</span>
-            </div>
+          <div className="footer-bottom-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 24 }}>
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-dim)' }}>© {new Date().getFullYear()} Ashton Holiday Lighting. All rights reserved.</p>
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-dim)' }}>Omaha, Nebraska · (402) 889-8640</p>
           </div>
         </div>
-        <div className="footer-bottom">
-          <span>2025 Ashton Holiday Lighting. All rights reserved.</span>
-          <span>Built with AI — Powered by Nano Banana Pro</span>
+      </footer>
+
+      {/*  SALE BANNER  */}
+      <div className="sale-banner" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200, height: 58, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20 }}>
+        <div className="sale-banner-inner" style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'nowrap' }}>
+          <span className="banner-tag-hide" style={{ background: 'rgba(255,255,255,0.15)', color: '#fff', fontSize: '0.65rem', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', padding: '3px 10px', borderRadius: 3, whiteSpace: 'nowrap' }}>Limited Time</span>
+          <p style={{ fontFamily: 'var(--font-sans)', fontSize: '0.9rem', fontWeight: 700, color: '#fff', letterSpacing: '0.04em', textShadow: '0 1px 4px rgba(0,0,0,0.3)', whiteSpace: 'nowrap' }}>
+            <strong style={{ color: '#ffe066' }}>50% OFF Installation</strong> — Spring Sale ends soon. Book your free consult now.
+          </p>
+          <button className="btn" style={{ background: '#fff', color: '#900', padding: '6px 18px', borderRadius: 4, fontSize: '0.78rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', flexShrink: 0 }} onClick={() => scrollTo('booking')}>
+            Claim Offer
+          </button>
         </div>
       </div>
-    </footer>
-  )
-}
-
-// ─── Sale Banner ──────────────────────────────────────────────────────────────
-function SaleBanner({ onBook }: { onBook: () => void }) {
-  const target = new Date('2025-10-01T00:00:00')
-  const { d, h, m, s } = useCountdown(target)
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return (
-    <div className="sale-banner">
-      <span className="sale-banner-text"><strong>50% OFF Early Bird Sale</strong> — Ends in</span>
-      <div className="countdown">
-        <div className="countdown-unit"><div className="countdown-val">{pad(d)}</div><div className="countdown-label">Days</div></div>
-        <div className="countdown-sep">:</div>
-        <div className="countdown-unit"><div className="countdown-val">{pad(h)}</div><div className="countdown-label">Hrs</div></div>
-        <div className="countdown-sep">:</div>
-        <div className="countdown-unit"><div className="countdown-val">{pad(m)}</div><div className="countdown-label">Min</div></div>
-        <div className="countdown-sep">:</div>
-        <div className="countdown-unit"><div className="countdown-val">{pad(s)}</div><div className="countdown-label">Sec</div></div>
-      </div>
-      <button className="sale-banner-btn" onClick={onBook}>Claim Discount</button>
-    </div>
-  )
-}
-
-// ─── App ──────────────────────────────────────────────────────────────────────
-export default function App() {
-  useFadeIn()
-  const scrollToBook = () => document.getElementById('book')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  const scrollToVisualizer = () => document.getElementById('ai-visualizer')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  return (
-    <>
-      <Nav onBook={scrollToBook}/>
-      <main>
-        <Hero onBook={scrollToBook} onVisualizer={scrollToVisualizer}/>
-        <Marquee/>
-        <Stats/>
-        <Features/>
-        <Gallery onVisualizer={scrollToVisualizer}/>
-        <Process onBook={scrollToBook}/>
-        <Pricing onBook={scrollToBook}/>
-        <AIVisualizer/>
-        <FAQ/>
-        <Booking/>
-        <AIShowcase/>
-      </main>
-      <Footer onBook={scrollToBook}/>
-      <SaleBanner onBook={scrollToBook}/>
     </>
   )
 }
