@@ -178,10 +178,15 @@ select, input, textarea { font-family: var(--font-body) }
 @keyframes pulse-gold { 0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(232,160,32,0.4) } 50% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(232,160,32,0) } }
 @keyframes pulse-green { 0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(46,204,113,0.4) } 50% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(46,204,113,0) } }
 @keyframes banner-scroll { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }
+@keyframes spin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
+@keyframes flicker { 0%, 100% { opacity: 1 } 50% { opacity: 0.5 } }
 
 @media (max-width: 1024px) {
   .nav-links, .nav-cta { display: none }
   .hamburger { display: flex }
+  section > div > div[style*='grid-template-columns: 1fr 1fr'],
+  section > div > div[style*='grid-template-columns: 1.15fr'],
+  section > div > div[style*='grid-template-columns: 1fr 1.4fr'] { grid-template-columns: 1fr !important }
   .mobile-menu { display: flex }
   .feature-grid { grid-template-columns: repeat(2, 1fr) }
   .pricing-grid { grid-template-columns: 1fr; max-width: 480px; margin: 0 auto }
