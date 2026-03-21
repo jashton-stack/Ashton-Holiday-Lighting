@@ -46,12 +46,13 @@ select, input, textarea { font-family: var(--font-body) }
 ::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 2px }
 ::selection { background: rgba(232,160,32,0.2); color: var(--cream) }
 
-.fi { opacity: 0; transform: translateY(28px); transition: opacity 0.72s cubic-bezier(0.22,1,0.36,1), transform 0.72s cubic-bezier(0.22,1,0.36,1) }
-.fi.vis { opacity: 1; transform: translateY(0) }
-.d1 { transition-delay: 0.1s }
-.d2 { transition-delay: 0.2s }
-.d3 { transition-delay: 0.3s }
-.d4 { transition-delay: 0.4s }
+.fi { opacity: 1; transform: translateY(0) }
+.js-ready .fi { opacity: 0; transform: translateY(28px); transition: opacity 0.72s cubic-bezier(0.22,1,0.36,1), transform 0.72s cubic-bezier(0.22,1,0.36,1) }
+.js-ready .fi.vis { opacity: 1; transform: translateY(0) }
+.js-ready .d1 { transition-delay: 0.1s }
+.js-ready .d2 { transition-delay: 0.2s }
+.js-ready .d3 { transition-delay: 0.3s }
+.js-ready .d4 { transition-delay: 0.4s }
 
 .btn { display: inline-flex; align-items: center; gap: 8px; border: none; border-radius: var(--r-md); font-weight: 600; font-size: 0.9rem; letter-spacing: 0.01em; transition: all 0.22s ease; white-space: nowrap; cursor: pointer }
 .btn:disabled { opacity: 0.5; cursor: not-allowed }

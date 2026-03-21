@@ -196,6 +196,8 @@ function CountdownTimer(): JSX.Element {
 
 function useFadeIn(): void {
   useEffect(() => {
+    // Add js-ready to body to enable fade-in animations
+    document.body.classList.add('js-ready')
     const els = document.querySelectorAll<HTMLElement>('.fi')
     const obs = new IntersectionObserver(
       entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('vis') }),
@@ -208,7 +210,7 @@ function useFadeIn(): void {
         const r = el.getBoundingClientRect()
         if (r.top < window.innerHeight) el.classList.add('vis')
       })
-    }, 80)
+    }, 60)
     return () => obs.disconnect()
   }, [])
 }
