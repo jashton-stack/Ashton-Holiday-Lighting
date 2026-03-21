@@ -447,7 +447,10 @@ export default function App(): JSX.Element {
             </li>
           ))}
         </ul>
-        <div className="nav-cta">
+        <div className="nav-cta" style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+          <a href="tel:4028898640" style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 800, color: 'var(--gold)', textDecoration: 'none', letterSpacing: '-0.01em', whiteSpace: 'nowrap' }}>
+            (402) 889-8640
+          </a>
           <button className="btn btn-primary" style={{ fontSize: '0.8rem', padding: '10px 22px' }} onClick={() => scrollTo('booking')}>
             Free Consult
           </button>
@@ -497,13 +500,24 @@ export default function App(): JSX.Element {
             </button>
           </div>
 
-          <div className="fi d4" style={{ display: 'flex', gap: 36, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <div className="fi d4" style={{ display: 'flex', gap: 36, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 40 }}>
             {['Free Consultation', 'Half-Day Install', '50% Off Now', 'Limited Warranty'].map(text => (
               <span key={text} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.82rem', color: 'var(--cream-mid)', fontFamily: 'var(--font-body)' }}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--gold)', display: 'inline-block', flexShrink: 0 }} />
                 {text}
               </span>
             ))}
+          </div>
+
+          {/* Phone CTA */}
+          <div className="fi d4" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.68rem', fontWeight: 600, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--cream-dim)' }}>Call or Text Anytime</span>
+            <a href="tel:4028898640" style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', fontWeight: 900, color: 'var(--gold)', letterSpacing: '-0.01em', textDecoration: 'none', lineHeight: 1, transition: 'opacity 0.2s' }}
+              onMouseEnter={e => (e.currentTarget.style.opacity = '0.8')}
+              onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
+              (402) 889-8640
+            </a>
+            <span style={{ fontSize: '0.78rem', color: 'var(--cream-dim)' }}>Prefer to talk? We pick up.</span>
           </div>
         </div>
 
@@ -816,6 +830,17 @@ export default function App(): JSX.Element {
 
             {/* Contact Form + Countdown */}
             <div className="fi d2" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+              {/* Phone CTA Card */}
+              <div style={{ background: 'var(--ink)', border: '1px solid var(--border-gold)', borderRadius: 'var(--r-lg)', padding: '22px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+                <div>
+                  <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.68rem', fontWeight: 600, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--cream-dim)', marginBottom: 6 }}>Prefer to Call or Text?</p>
+                  <a href="tel:4028898640" style={{ fontFamily: 'var(--font-display)', fontSize: '1.7rem', fontWeight: 900, color: 'var(--gold)', textDecoration: 'none', letterSpacing: '-0.01em', lineHeight: 1 }}>(402) 889-8640</a>
+                  <p style={{ fontSize: '0.78rem', color: 'var(--cream-dim)', marginTop: 4 }}>We pick up. Fast responses guaranteed.</p>
+                </div>
+                <a href="tel:4028898640" className="btn btn-primary" style={{ whiteSpace: 'nowrap' }}>Call Now</a>
+              </div>
+
               <div style={{ background: 'var(--ink)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', padding: '28px', position: 'relative' }}>
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, var(--gold-light), var(--gold-dim))' }} />
                 <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1rem', color: 'var(--cream)', marginBottom: 6 }}>Or Send Us a Message</h3>
