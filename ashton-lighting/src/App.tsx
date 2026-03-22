@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { PrivacyPolicy, TermsOfService } from './LegalPages'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -396,6 +397,10 @@ export default function App(): JSX.Element {
   const [formStatus, setFormStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle')
   const [formError, setFormError] = useState('')
   const [navScrolled, setNavScrolled] = useState(false)
+  const [currentPage, setCurrentPage] = useState<'home' | 'privacy' | 'terms'>('home')
+
+  const openLegal = (page: 'privacy' | 'terms') => { setCurrentPage(page); window.scrollTo({ top: 0 }) }
+  const closeLegal = () => { setCurrentPage('home'); window.scrollTo({ top: 0 }) }
 
   useFadeIn()
 
@@ -429,6 +434,9 @@ export default function App(): JSX.Element {
 
   const inp = (field: keyof typeof formState) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setFormState(s => ({ ...s, [field]: e.target.value }))
+
+  if (currentPage === 'privacy') return <PrivacyPolicy onClose={closeLegal} />
+  if (currentPage === 'terms') return <TermsOfService onClose={closeLegal} />
 
   return (
     <>
@@ -983,7 +991,21 @@ export default function App(): JSX.Element {
           </div>
           <div className="footer-bottom">
             <span>© {new Date().getFullYear()} Ashton Holiday Lighting. All rights reserved. Omaha, Nebraska.</span>
-            <span>Installs start at $800 — <span style={{ color: 'var(--gold)', cursor: 'pointer' }} onClick={() => scrollTo('booking')}>Book your free quote today</span></span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
+              <span
+                style={{ color: 'var(--cream-dim)', cursor: 'pointer', fontSize: '0.8rem', transition: 'color 0.2s' }}
+                onClick={() => openLegal('privacy')}
+                onMouseEnter={e => (e.currentTarget.style.color = 'var(--gold)')}
+                onMouseLeave={e => (e.currentTarget.style.color = 'var(--cream-dim)')}
+              >Privacy Policy</span>
+              <span style={{ color: 'var(--border)', fontSize: '0.8rem' }}>|</span>
+              <span
+                style={{ color: 'var(--cream-dim)', cursor: 'pointer', fontSize: '0.8rem', transition: 'color 0.2s' }}
+                onClick={() => openLegal('terms')}
+                onMouseEnter={e => (e.currentTarget.style.color = 'var(--gold)')}
+                onMouseLeave={e => (e.currentTarget.style.color = 'var(--cream-dim)')}
+              >Terms of Service</span>
+            </span>
           </div>
         </div>
       </footer>
