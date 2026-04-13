@@ -1,5 +1,5 @@
 /* Design System */
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700;1,800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
   --ink:          #0d0c0a;
@@ -83,7 +83,7 @@ select, input, textarea { font-family: var(--font-body) }
 .eyebrow.center { text-align: center }
 
 .section-title { font-family: var(--font-display); font-size: clamp(2.4rem, 5vw, 3.6rem); font-weight: 900; line-height: 1.05; letter-spacing: -0.025em; color: var(--cream); margin-bottom: 24px }
-.section-title em { font-style: italic; color: var(--gold) }
+.section-title em { font-style: normal; font-weight: 900; color: var(--gold); text-shadow: 0 0 7px rgba(232,160,32,0.6), 0 0 20px rgba(232,160,32,0.35), 0 0 40px rgba(232,160,32,0.15) }
 .section-lead { font-size: 1.05rem; line-height: 1.8; color: var(--cream-mid); max-width: 520px; margin-bottom: 36px }
 
 .marquee-strip { background: var(--gold); overflow: hidden; padding: 12px 0; border-top: 1px solid var(--gold-dim); border-bottom: 1px solid var(--gold-dim) }
@@ -133,9 +133,6 @@ select, input, textarea { font-family: var(--font-body) }
 .pricing-feature { display: flex; align-items: center; gap: 10px; font-size: 0.86rem; color: var(--cream-mid) }
 .pricing-check { width: 18px; height: 18px; border-radius: 50%; background: var(--gold-glow); border: 1px solid var(--border-gold); display: flex; align-items: center; justify-content: center; flex-shrink: 0 }
 
-.upload-zone { border: 2px dashed var(--border-gold); border-radius: var(--r-lg); padding: 48px 32px; text-align: center; cursor: pointer; transition: all 0.25s ease; background: var(--gold-glow); margin-bottom: 14px }
-.upload-zone:hover, .upload-zone.drag-over { border-color: var(--gold); background: rgba(232,160,32,0.08) }
-.upload-icon { width: 56px; height: 56px; border-radius: var(--r-md); background: var(--surface-3); border: 1px solid var(--border-gold); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; color: var(--gold) }
 
 .form-group { display: flex; flex-direction: column; gap: 6px }
 .form-label { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--cream-dim) }

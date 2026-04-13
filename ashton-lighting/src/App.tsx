@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { PrivacyPolicy, TermsOfService } from './LegalPages'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -18,14 +18,13 @@ const BULB_COLORS = [
 
 const FAQS: FaqItem[] = [
   { q: 'What are permanent holiday lights?', a: 'Permanent holiday lights — like the Govee Permanent Outdoor Lights we install — are weatherproof LED fixtures installed once and stay on your home year-round. You control colors, patterns, and schedules through a smartphone app. No ladder every season, no tangled wires in the garage.' },
-  { q: 'How much does installation cost?', a: 'Our pricing starts at $800 for a 1-story home front, $1,200 for a 2-story home front, and $1,500+ for custom or larger properties. Every home is different, which is why we offer a free on-site consultation and exact quote. And right now, our sale takes 50% off installation.' },
+  { q: 'How much does installation cost?', a: 'Our pricing starts at $800 for a 1-story home front, $1,200 for a 2-story home front, and $1,500+ for custom or larger properties. Every home is different, which is why we offer a free on-site consultation and exact quote. And right now, our sale takes 25% off your booking.' },
   { q: 'How long does a typical install take?', a: 'Most homes are done in about half a day. We handle everything — mounting the brackets, running the wiring, syncing the app, and walking you through your first set of scenes before we leave.' },
   { q: 'Are the lights visible during the day?', a: 'The brackets are low-profile and designed to blend into your roofline and eaves. Most homeowners find them nearly invisible in daylight — clean and architectural, not an eyesore.' },
   { q: 'Can I control the colors and patterns myself?', a: "Yes. The Govee app gives you full control over 16 million+ colors, dozens of pre-set holiday scenes, custom patterns, schedules, and even music-sync modes. Switch from Christmas red and green to your team's game-day colors with a single tap." },
   { q: 'Are the lights safe in Nebraska winters?', a: "Absolutely. Govee permanent lights are IP67 waterproof and built for extreme temperature swings — rain, snow, ice, and Omaha's notoriously cold winters are no problem." },
   { q: 'Do you offer a warranty?', a: "Yes — we offer a limited workmanship warranty on our installations, and the Govee hardware comes with its own manufacturer's warranty. If something isn't working right after install, reach out and we'll make it right." },
   { q: 'Do the lights work with Alexa or Google Home?', a: 'Yes. Govee integrates with Amazon Alexa, Google Home, and Apple HomeKit so you can control your lights with voice commands or fold them into your existing smart home routines.' },
-  { q: 'What is the AI House Visualizer?', a: 'Our AI House Visualizer lets you upload a photo of your home and see exactly what it would look like with permanent holiday lights installed. Powered by advanced AI image generation, it gives you a realistic preview before you commit — completely free.' },
   { q: 'How do I get started?', a: "Simply book a free on-site consultation using our calendar below. We'll visit your home, measure your roofline, walk you through the options, and give you a no-obligation custom quote — all in about 20-30 minutes." },
 ]
 
@@ -216,178 +215,6 @@ function useFadeIn(): void {
   }, [])
 }
 
-// ─── AI Visualizer ────────────────────────────────────────────────────────────
-
-function AIVisualizer(): JSX.Element {
-  const [stage, setStage] = useState<'idle' | 'preview' | 'loading' | 'result' | 'error'>('idle')
-  const [uploadedImage, setUploadedImage] = useState<string | null>(null)
-  const [resultImage, setResultImage] = useState<string | null>(null)
-  const [dragOver, setDragOver] = useState(false)
-  const [errorMsg, setErrorMsg] = useState('')
-  const [lightStyle, setLightStyle] = useState('Christmas (Red & Green)')
-  const fileRef = useRef<HTMLInputElement>(null)
-
-  const LIGHT_STYLES = [
-    'Christmas (Red & Green)', 'Warm White Classic', 'Halloween (Orange & Purple)',
-    'Fourth of July (Red, White & Blue)', "Valentine's Day (Pink & Red)",
-    "St. Patrick's Day (Green)", 'Easter (Pastel Rainbow)', 'Custom Color Party',
-  ]
-
-  const handleFile = useCallback((file: File) => {
-    if (!file.type.startsWith('image/')) { setErrorMsg('Please upload an image file (JPG, PNG, WEBP).'); return }
-    if (file.size > 10 * 1024 * 1024) { setErrorMsg('Image must be under 10MB.'); return }
-    setErrorMsg('')
-    const reader = new FileReader()
-    reader.onload = (e) => { setUploadedImage(e.target?.result as string); setStage('preview') }
-    reader.readAsDataURL(file)
-  }, [])
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault(); setDragOver(false)
-    const file = e.dataTransfer.files[0]
-    if (file) handleFile(file)
-  }, [handleFile])
-
-  const handleGenerate = async () => {
-    if (!uploadedImage) return
-    setStage('loading')
-    setResultImage(null)
-    try {
-      const response = await fetch('/.netlify/functions/visualize', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageData: uploadedImage, lightStyle }),
-      })
-      if (!response.ok) throw new Error(`Status ${response.status}`)
-      const data = await response.json()
-      if (data.imageUrl) { setResultImage(data.imageUrl); setStage('result') }
-      else throw new Error('No image returned')
-    } catch (err) {
-      console.error(err)
-      setErrorMsg('AI generation encountered an issue. Please try again or call us at (402) 889-8640.')
-      setStage('error')
-    }
-  }
-
-  const reset = () => { setStage('idle'); setUploadedImage(null); setResultImage(null); setErrorMsg('') }
-
-  return (
-    <div style={{ maxWidth: 900, margin: '0 auto' }}>
-
-      {/* Idle — upload zone */}
-      {stage === 'idle' && (
-        <div
-          className={`upload-zone${dragOver ? ' drag-over' : ''}`}
-          onDragOver={e => { e.preventDefault(); setDragOver(true) }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={handleDrop}
-          onClick={() => fileRef.current?.click()}
-        >
-          <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f) }} />
-          <div className="upload-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
-              <polyline points="21 15 16 10 5 21"/>
-            </svg>
-          </div>
-          <p style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: 700, color: 'var(--cream)', marginBottom: 8 }}>Drop your home photo here</p>
-          <p style={{ fontSize: '0.88rem', color: 'var(--cream-dim)', marginBottom: 20 }}>or click to browse — JPG, PNG, WEBP up to 10MB</p>
-          <button className="btn btn-primary" style={{ pointerEvents: 'none' }}>Choose Photo</button>
-          {errorMsg && <p style={{ color: '#fc8181', fontSize: '0.85rem', marginTop: 14 }}>{errorMsg}</p>}
-        </div>
-      )}
-
-      {/* Preview — image + style selector */}
-      {stage === 'preview' && uploadedImage && (
-        <div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 24 }}>
-            <div>
-              <p style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--cream-dim)', marginBottom: 10, fontFamily: 'var(--font-mono)' }}>Your Home</p>
-              <img src={uploadedImage} alt="Your home" style={{ width: '100%', borderRadius: 'var(--r-md)', border: '1px solid var(--border)', objectFit: 'cover', aspectRatio: '4/3', display: 'block' }} />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-              <div>
-                <p style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--cream-dim)', marginBottom: 10, fontFamily: 'var(--font-mono)' }}>Choose Light Style</p>
-                <select className="form-input" value={lightStyle} onChange={e => setLightStyle(e.target.value)}>
-                  {LIGHT_STYLES.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
-              </div>
-              <div style={{ background: 'var(--gold-glow)', border: '1px solid var(--border-gold)', borderRadius: 'var(--r-md)', padding: '14px 16px' }}>
-                <p style={{ fontSize: '0.82rem', color: 'var(--cream-dim)', lineHeight: 1.6 }}>
-                  <span style={{ color: 'var(--gold)', fontWeight: 600 }}>AI-Powered Preview</span><br />
-                  Our AI will generate a realistic visualization of your home with {lightStyle} permanent lighting installed along the roofline and eaves.
-                </p>
-              </div>
-              <button className="btn btn-primary" onClick={handleGenerate} style={{ width: '100%', padding: '14px', justifyContent: 'center' }}>
-                Generate AI Preview
-              </button>
-              <button className="btn btn-outline" onClick={reset} style={{ width: '100%', justifyContent: 'center' }}>
-                Upload Different Photo
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Loading */}
-      {stage === 'loading' && (
-        <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-          <div style={{ width: 80, height: 80, margin: '0 auto 28px', position: 'relative' }}>
-            <div style={{ position: 'absolute', inset: 0, border: '3px solid rgba(232,160,32,0.15)', borderRadius: '50%' }} />
-            <div style={{ position: 'absolute', inset: 0, border: '3px solid transparent', borderTopColor: 'var(--gold)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-            <div style={{ position: 'absolute', inset: 8, border: '2px solid transparent', borderTopColor: 'var(--gold-dim)', borderRadius: '50%', animation: 'spin 0.7s linear infinite reverse' }} />
-          </div>
-          <p style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: 700, color: 'var(--cream)', marginBottom: 8 }}>AI is visualizing your home...</p>
-          <p style={{ fontSize: '0.88rem', color: 'var(--cream-dim)', marginBottom: 24 }}>Analyzing roofline, applying {lightStyle} lighting — this takes about 15-30 seconds</p>
-        </div>
-      )}
-
-      {/* Result */}
-      {stage === 'result' && resultImage && uploadedImage && (
-        <div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 24 }}>
-            <div>
-              <p style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--cream-dim)', marginBottom: 10, fontFamily: 'var(--font-mono)' }}>Before</p>
-              <img src={uploadedImage} alt="Before" style={{ width: '100%', borderRadius: 'var(--r-md)', border: '1px solid var(--border)', objectFit: 'cover', aspectRatio: '4/3', display: 'block' }} />
-            </div>
-            <div>
-              <p style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: 10, fontFamily: 'var(--font-mono)' }}>After — AI Preview</p>
-              <img src={resultImage} alt="AI visualization" style={{ width: '100%', borderRadius: 'var(--r-md)', border: '1px solid var(--border-gold)', objectFit: 'cover', aspectRatio: '4/3', boxShadow: '0 0 30px rgba(232,160,32,0.2)', display: 'block' }} />
-            </div>
-          </div>
-          <div style={{ background: 'var(--gold-glow)', border: '1px solid var(--border-gold)', borderRadius: 'var(--r-md)', padding: '20px 24px', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
-            <div>
-              <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--cream)', marginBottom: 4 }}>Love what you see?</p>
-              <p style={{ fontSize: '0.88rem', color: 'var(--cream-dim)' }}>Book your free consultation and we'll bring this vision to life — usually within 2 weeks.</p>
-            </div>
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-              <button className="btn btn-primary" onClick={() => document.getElementById('booking')?.scrollIntoView({ behavior: 'smooth' })}>Book Free Consult</button>
-              <button className="btn btn-outline" onClick={reset}>Try Another Photo</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Error */}
-      {stage === 'error' && (
-        <div style={{ textAlign: 'center', padding: '48px 20px' }}>
-          <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(252,129,129,0.1)', border: '1px solid rgba(252,129,129,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#fc8181" strokeWidth="1.5" strokeLinecap="round">
-              <circle cx="10" cy="10" r="9"/><path d="M10 6v4M10 14h.01"/>
-            </svg>
-          </div>
-          <p style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 700, color: 'var(--cream)', marginBottom: 8 }}>Generation Failed</p>
-          <p style={{ fontSize: '0.88rem', color: 'var(--cream-dim)', marginBottom: 24, maxWidth: 400, margin: '0 auto 24px' }}>{errorMsg}</p>
-          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button className="btn btn-primary" onClick={() => setStage('preview')}>Try Again</button>
-            <button className="btn btn-outline" onClick={reset}>Upload New Photo</button>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
 // ─── Main App ─────────────────────────────────────────────────────────────────
 
 export default function App(): JSX.Element {
@@ -492,7 +319,7 @@ export default function App(): JSX.Element {
 
           <h1 className="fi d1" style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(2.8rem, 6vw, 5.2rem)', fontWeight: 900, lineHeight: 1.05, color: 'var(--cream)', marginBottom: 24, letterSpacing: '-0.02em' }}>
             Holiday Lights.<br />
-            <em style={{ color: 'var(--gold)', fontStyle: 'italic' }}>All Year Beautiful.</em>
+            <em style={{ color: 'var(--gold)', fontStyle: 'normal' }}>All Year Beautiful.</em>
           </h1>
 
           <p className="fi d2" style={{ fontSize: 'clamp(1rem, 2vw, 1.18rem)', color: 'var(--cream-mid)', lineHeight: 1.8, marginBottom: 44, maxWidth: 600, margin: '0 auto 44px' }}>
@@ -503,13 +330,13 @@ export default function App(): JSX.Element {
             <button className="btn btn-primary" style={{ fontSize: '1rem', padding: '15px 32px' }} onClick={() => scrollTo('booking')}>
               Book Free Consultation
             </button>
-            <button className="btn btn-outline" style={{ fontSize: '1rem', padding: '15px 32px' }} onClick={() => scrollTo('visualizer')}>
-              See AI Preview of Your Home
+            <button className="btn btn-outline" style={{ fontSize: '1rem', padding: '15px 32px' }} onClick={() => scrollTo('gallery')}>
+              See Our Work
             </button>
           </div>
 
           <div className="fi d4" style={{ display: 'flex', gap: 36, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 40 }}>
-            {['Free Consultation', 'Half-Day Install', '50% Off Now', 'Limited Warranty'].map(text => (
+            {['Free Consultation', 'Half-Day Install', '25% Off in May', 'Limited Warranty'].map(text => (
               <span key={text} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.82rem', color: 'var(--cream-mid)', fontFamily: 'var(--font-body)' }}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--gold)', display: 'inline-block', flexShrink: 0 }} />
                 {text}
@@ -556,7 +383,7 @@ export default function App(): JSX.Element {
             { num: '5.0', label: 'Star Rated', sub: 'Google Reviews' },
             { num: '$800', label: 'Installs Start At', sub: 'free quote included' },
             { num: '1/2 Day', label: 'Typical Install', sub: 'in & out fast' },
-            { num: '50%', label: 'Off Installation', sub: 'limited time offer' },
+            { num: '25%', label: 'Off in May', sub: 'book this month' },
           ].map(({ num, label, sub }) => (
             <div key={label} className="stat-cell">
               <div className="stat-number">{num}</div>
@@ -661,42 +488,11 @@ export default function App(): JSX.Element {
             </div>
           </div>
           <div className="fi" style={{ textAlign: 'center', marginTop: 40 }}>
-            <button className="btn btn-primary" onClick={() => scrollTo('visualizer')}>See What Your Home Would Look Like</button>
+            <button className="btn btn-primary" onClick={() => scrollTo('booking')}>Get a Free Quote</button>
           </div>
         </div>
       </section>
 
-      {/* ── AI VISUALIZER ── */}
-      <section id="visualizer" style={{ padding: '120px 48px', background: 'var(--surface)' }}>
-        <div style={{ maxWidth: 'var(--inner-max)', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 56 }}>
-            <p className="fi eyebrow center">AI-Powered</p>
-            <h2 className="fi d1 section-title" style={{ textAlign: 'center' }}>See Your Home <em>Transformed</em></h2>
-            <p className="fi d2 section-lead" style={{ margin: '0 auto 16px', textAlign: 'center' }}>Upload a photo of your home and our AI will generate a realistic preview of what it would look like with permanent holiday lights installed — before you spend a single dollar.</p>
-            <div className="fi d3" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--gold-glow)', border: '1px solid var(--border-gold)', borderRadius: 100, padding: '6px 18px', marginBottom: 40 }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--gold)', display: 'inline-block', animation: 'pulse-gold 2s ease-in-out infinite' }} />
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.12em', color: 'var(--gold)' }}>Powered by Advanced AI Image Generation</span>
-            </div>
-          </div>
-          <div className="fi d2" style={{ background: 'var(--ink)', border: '1px solid var(--border)', borderRadius: 'var(--r-xl)', padding: '40px', position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, var(--gold-dim), var(--gold), var(--gold-light))' }} />
-            <AIVisualizer />
-          </div>
-          <div className="fi" style={{ marginTop: 32, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
-            {[
-              { title: 'Private & Secure', desc: 'Your photos are processed securely and never stored or shared.' },
-              { title: 'Results in ~20 Seconds', desc: 'Our AI analyzes your roofline and generates a realistic preview fast.' },
-              { title: 'Completely Free', desc: 'No sign-up required. Just upload and see your home transformed.' },
-            ].map(({ title, desc }) => (
-              <div key={title} style={{ textAlign: 'center', padding: '20px 16px' }}>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--gold)', boxShadow: '0 0 8px rgba(232,160,32,0.5)', margin: '0 auto 12px' }} />
-                <div style={{ fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: '0.9rem', color: 'var(--cream)', marginBottom: 6 }}>{title}</div>
-                <div style={{ fontSize: '0.82rem', color: 'var(--cream-dim)', lineHeight: 1.6 }}>{desc}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* ── PROCESS ── */}
       <section style={{ padding: '120px 48px', background: 'var(--ink)', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
@@ -759,8 +555,8 @@ export default function App(): JSX.Element {
             ))}
           </div>
           <div className="fi" style={{ marginTop: 32, textAlign: 'center', padding: '20px 24px', background: 'var(--gold-glow)', border: '1px solid var(--border-gold)', borderRadius: 'var(--r-md)' }}>
-            <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--gold)', marginBottom: 4 }}>Sale Active: 50% Off Installation</p>
-            <p style={{ fontSize: '0.88rem', color: 'var(--cream-dim)' }}>Book your free consultation before the sale ends to lock in this price. Hardware costs remain the same.</p>
+            <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--gold)', marginBottom: 4 }}>May Special: 25% Off Bookings</p>
+            <p style={{ fontSize: '0.88rem', color: 'var(--cream-dim)' }}>Book your free consultation in May to lock in 25% off. Hardware costs remain the same.</p>
           </div>
         </div>
       </section>
@@ -810,16 +606,16 @@ export default function App(): JSX.Element {
         <div style={{ maxWidth: 'var(--inner-max)', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 56 }}>
             <p className="fi eyebrow center">Get Started</p>
-            <h2 className="fi d1 section-title" style={{ textAlign: 'center' }}>Book Your Free <em>Consultation</em></h2>
-            <p className="fi d2 section-lead" style={{ margin: '0 auto', textAlign: 'center' }}>We'll visit your home, measure your roofline, and give you a no-obligation quote — all for free. Most installs are done in half a day.</p>
+            <h2 className="fi d1 section-title" style={{ textAlign: 'center' }}>Get In <em>Touch</em></h2>
+            <p className="fi d2 section-lead" style={{ margin: '0 auto', textAlign: 'center' }}>We'll measure your roofline and give you a no-obligation quote — Send us a message or book a free consultation below.</p>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 48, alignItems: 'start' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 48, alignItems: 'start' }}>
             {/* GHL Calendar */}
             <div className="fi" style={{ background: 'var(--ink)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', overflow: 'hidden', position: 'relative' }}>
               <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, var(--gold-dim), var(--gold), var(--gold-light))' }} />
               <div style={{ padding: '20px 24px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
                 <div>
-                  <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1rem', color: 'var(--cream)', marginBottom: 4 }}>Schedule a Consultation</h3>
+                  <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1rem', color: 'var(--cream)', marginBottom: 4 }}>Or Book a Consultation</h3>
                   <p style={{ fontSize: '0.8rem', color: 'var(--cream-dim)' }}>Pick a date and time that works for you.</p>
                 </div>
                 <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
@@ -851,7 +647,7 @@ export default function App(): JSX.Element {
 
               <div style={{ background: 'var(--ink)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', padding: '28px', position: 'relative' }}>
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, var(--gold-light), var(--gold-dim))' }} />
-                <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1rem', color: 'var(--cream)', marginBottom: 6 }}>Or Send Us a Message</h3>
+                <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1rem', color: 'var(--cream)', marginBottom: 6 }}>Send Us a Message</h3>
                 <p style={{ fontSize: '0.82rem', color: 'var(--cream-dim)', marginBottom: 20 }}>We respond within 1 business day.</p>
                 {formStatus === 'success' ? (
                   <div style={{ background: 'var(--gold-glow)', border: '1px solid var(--border-gold)', borderRadius: 'var(--r-md)', padding: 24, textAlign: 'center' }}>
@@ -893,63 +689,15 @@ export default function App(): JSX.Element {
 
               {/* Countdown */}
               <div style={{ background: 'var(--ink)', border: '1px solid var(--border-gold)', borderRadius: 'var(--r-lg)', padding: '20px 22px' }}>
-                <p style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '0.72rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: 14 }}>Sale Ends In:</p>
+                <p style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '0.72rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: 14 }}>May Special Ends In:</p>
                 <CountdownTimer />
-                <p style={{ fontSize: '0.78rem', color: 'var(--cream-dim)', marginTop: 12, lineHeight: 1.5 }}>Book before the timer hits zero to lock in <strong style={{ color: 'var(--gold)' }}>50% off installation</strong>.</p>
+                <p style={{ fontSize: '0.78rem', color: 'var(--cream-dim)', marginTop: 12, lineHeight: 1.5 }}>Book in May to lock in <strong style={{ color: 'var(--gold)' }}>25% off your booking</strong>.</p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── AI COMPANY SHOWCASE ── */}
-      <section style={{ padding: '100px 48px', background: 'var(--ink)', borderTop: '1px solid var(--border)' }}>
-        <div style={{ maxWidth: 'var(--inner-max)', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64, alignItems: 'center' }}>
-          <div>
-            <div className="fi" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.25)', borderRadius: 100, padding: '6px 18px', marginBottom: 20 }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#8b5cf6', display: 'inline-block', animation: 'pulse-gold 2s ease-in-out infinite' }} />
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#8b5cf6' }}>AI Integration Showcase</span>
-            </div>
-            <h2 className="fi d1 section-title">This Website is <em style={{ color: '#a78bfa' }}>Powered by AI</em></h2>
-            <p className="fi d2 section-lead">Every element of this website — from the AI House Visualizer to the automated lead workflows — was built and optimized using cutting-edge artificial intelligence.</p>
-            <ul className="fi d3" style={{ listStyle: 'none', marginTop: 28, display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {[
-                'AI-generated house visualization previews',
-                'Automated CRM and lead routing via GoHighLevel',
-                'Conversion-optimized layout built with AI assistance',
-                'Smart contact workflows and follow-up automation',
-              ].map(text => (
-                <li key={text} style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: '0.88rem', color: 'var(--cream-dim)' }}>
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#8b5cf6', display: 'inline-block', flexShrink: 0 }} />
-                  {text}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="fi d2" style={{ background: 'var(--surface)', border: '1px solid rgba(139,92,246,0.2)', borderRadius: 'var(--r-xl)', padding: '36px', position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #7c3aed, var(--gold), var(--gold-light))' }} />
-            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.68rem', fontWeight: 600, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#8b5cf6', marginBottom: 20 }}>AI Stack</p>
-            {[
-              { label: 'House Visualizer', tech: 'Nano Banana Pro (Gemini)', status: 'Live' },
-              { label: 'Lead Automation', tech: 'GoHighLevel + AI Workflows', status: 'Live' },
-              { label: 'Conversion Copy', tech: 'AI-Optimized Messaging', status: 'Active' },
-              { label: 'Site Architecture', tech: 'AI-Designed & Built', status: 'Active' },
-            ].map(({ label, tech, status }) => (
-              <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid var(--border)' }}>
-                <div>
-                  <div style={{ fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: '0.88rem', color: 'var(--cream)', marginBottom: 2 }}>{label}</div>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: 'var(--cream-dim)' }}>{tech}</div>
-                </div>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.1em', color: '#2ecc71', background: 'rgba(46,204,113,0.1)', border: '1px solid rgba(46,204,113,0.25)', borderRadius: 100, padding: '3px 10px' }}>{status}</span>
-              </div>
-            ))}
-            <div style={{ marginTop: 20, padding: '12px 16px', background: 'rgba(46,204,113,0.06)', border: '1px solid rgba(46,204,113,0.2)', borderRadius: 'var(--r-md)', display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#2ecc71', boxShadow: '0 0 8px #2ecc71', flexShrink: 0, animation: 'pulse-green 2s ease-in-out infinite' }} />
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', fontWeight: 600, color: '#2ecc71', letterSpacing: '0.08em' }}>ALL SYSTEMS OPERATIONAL</span>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* ── FOOTER ── */}
       <footer className="footer">
@@ -985,7 +733,6 @@ export default function App(): JSX.Element {
                 <a href="tel:4028898640" className="footer-link">(402) 889-8640</a>
                 <a href="mailto:info@ashtonholidaylighting.com" className="footer-link">info@ashtonholidaylighting.com</a>
                 <span className="footer-link" onClick={() => scrollTo('booking')}>Book Free Consultation</span>
-                <span className="footer-link" onClick={() => scrollTo('visualizer')}>AI House Visualizer</span>
               </div>
             </div>
           </div>
@@ -1012,7 +759,7 @@ export default function App(): JSX.Element {
 
       {/* ── SALE BANNER ── */}
       <div className="sale-banner">
-        <span className="sale-banner-text"><strong>50% Off Installation</strong> — Spring Sale ends soon.</span>
+        <span className="sale-banner-text"><strong>25% Off Bookings in May</strong> — Limited time offer.</span>
         <CountdownTimer />
         <button className="sale-banner-btn" onClick={() => scrollTo('booking')}>Claim Offer</button>
       </div>
