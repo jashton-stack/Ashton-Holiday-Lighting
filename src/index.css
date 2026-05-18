@@ -45,7 +45,7 @@
     @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-offset-4;
   }
   .btn-primary {
-    @apply btn-base text-ink hover:-translate-y-0.5 active:translate-y-0;
+    @apply btn-base text-ink hover:-translate-y-0.5 active:translate-y-0 px-8 py-4 text-base sm:px-12 sm:py-6 sm:text-xl;
     animation: ctaCycle 14s linear infinite;
   }
   .btn-secondary {

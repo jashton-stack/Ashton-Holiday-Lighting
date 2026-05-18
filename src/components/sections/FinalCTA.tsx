@@ -14,7 +14,7 @@ export function FinalCTA() {
           Free quote in 24 hours. No high-pressure sales. Just a fair price for a permanent solution.
         </p>
         <div className="mt-10 flex flex-col items-center gap-3">
-          <ButtonLink to="/contact" variant="primary" className="text-base px-8 py-4">
+          <ButtonLink to="/contact" variant="primary">
             Get Your Free Quote →
           </ButtonLink>
           <p className="text-xs text-textdark/50">Serving the Omaha metro within 25 miles.</p>

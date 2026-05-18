@@ -51,7 +51,7 @@ export function Hero() {
         </p>
 
         <div className="mt-10 flex flex-col items-center gap-3 animate-fade-up" style={{ animationDelay: '380ms' }}>
-          <ButtonLink to="/contact" variant="primary" className="text-base px-8 py-4">
+          <ButtonLink to="/contact" variant="primary">
             Get Your Free Quote →
           </ButtonLink>
           <p className="text-xs sm:text-sm text-textdark/55 mt-2">
