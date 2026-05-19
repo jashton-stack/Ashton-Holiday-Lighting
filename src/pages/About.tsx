@@ -1,5 +1,6 @@
 import { Section, SectionEyebrow, SectionHeading, SectionLead } from '../components/ui/Section';
 import { ButtonLink } from '../components/ui/Button';
+import { PhoneLink } from '../components/ui/PhoneLink';
 import { SITE } from '../lib/site';
 
 export default function About() {
@@ -101,9 +102,9 @@ export default function About() {
           <ButtonLink to="/contact" variant="primary">
             Get your free quote →
           </ButtonLink>
-          <a href={SITE.phoneHref} className="btn-secondary">
+          <PhoneLink className="btn-secondary">
             Call {SITE.phone}
-          </a>
+          </PhoneLink>
         </div>
       </Section>
     </div>

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { SITE, NAV_LINKS } from '../lib/site';
+import { PhoneLink } from './ui/PhoneLink';
 
 export function Footer() {
   return (
@@ -38,9 +39,9 @@ export function Footer() {
           <p className="eyebrow text-textdark/55 mb-4">Contact</p>
           <ul className="space-y-2 text-textdark/85">
             <li>
-              <a href={SITE.phoneHref} className="hover:text-warmth">
+              <PhoneLink className="hover:text-warmth">
                 {SITE.phone}
-              </a>
+              </PhoneLink>
             </li>
             <li>
               <a href={`mailto:${SITE.email}`} className="hover:text-warmth break-all">

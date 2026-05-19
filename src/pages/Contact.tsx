@@ -1,7 +1,9 @@
 import { useState, type FormEvent } from 'react';
 import { Section, SectionEyebrow, SectionHeading, SectionLead } from '../components/ui/Section';
 import { Button } from '../components/ui/Button';
+import { PhoneLink } from '../components/ui/PhoneLink';
 import { SITE } from '../lib/site';
+import { trackLeadSubmit } from '../lib/tracking';
 
 type Status = 'idle' | 'submitting' | 'success' | 'error';
 
@@ -33,6 +35,8 @@ export default function Contact() {
       if (!res.ok || !data.ok) {
         throw new Error(data.error || `Server returned ${res.status}.`);
       }
+      // Confirmed server-side success only — fires the Google Ads lead conversion.
+      trackLeadSubmit();
       setStatus('success');
       form.reset();
     } catch (err) {
@@ -60,12 +64,9 @@ export default function Contact() {
             <div className="mt-10 space-y-5 text-sm">
               <div>
                 <p className="eyebrow text-muted mb-1">Phone</p>
-                <a
-                  href={SITE.phoneHref}
-                  className="text-bone-text font-semibold text-lg hover:text-warmth-dark"
-                >
+                <PhoneLink className="text-bone-text font-semibold text-lg hover:text-warmth-dark">
                   {SITE.phone}
-                </a>
+                </PhoneLink>
               </div>
               <div>
                 <p className="eyebrow text-muted mb-1">Email</p>
