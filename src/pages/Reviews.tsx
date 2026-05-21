@@ -17,15 +17,6 @@ export default function Reviews() {
           {REVIEWS.map((r) => (
             <ReviewCard key={r.name} review={r} />
           ))}
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div
-              key={`placeholder-${i}`}
-              className="rounded-2xl border border-dashed border-black/15 p-8 text-muted text-sm"
-            >
-              {/* ADD REVIEW HERE — append a new entry to src/data/reviews.ts */}
-              Add a new review by editing <code className="text-xs">src/data/reviews.ts</code>.
-            </div>
-          ))}
         </div>
 
         <div className="mt-12">
