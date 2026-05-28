@@ -6,7 +6,12 @@ declare global {
 }
 
 const GOOGLE_ADS_ID = 'AW-11038716571';
-const LEAD_LABEL = import.meta.env.VITE_GADS_LEAD_LABEL as string | undefined;
+// Conversion labels are sent client-side (not secret). The real lead label is
+// hardcoded as the default so the conversion fires on deploy without a Netlify
+// env step; VITE_GADS_LEAD_LABEL still overrides it if set. Phone label stays
+// env-only (no-op) until that conversion action is created in Google Ads.
+const LEAD_LABEL =
+  (import.meta.env.VITE_GADS_LEAD_LABEL as string | undefined) || 'iXlRCIjp-7QcEJvl1Y8p';
 const PHONE_LABEL = import.meta.env.VITE_GADS_PHONE_LABEL as string | undefined;
 
 function fireConversion(label: string | undefined): void {
