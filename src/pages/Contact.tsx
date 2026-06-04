@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Section, SectionEyebrow, SectionHeading, SectionLead } from '../components/ui/Section';
 import { Button } from '../components/ui/Button';
 import { PhoneLink } from '../components/ui/PhoneLink';
+import { ReviewsHomepage } from '../components/sections/ReviewsHomepage';
 import { SITE } from '../lib/site';
 import { trackLeadSubmit } from '../lib/tracking';
 import { trackLead } from '../lib/fbq';
@@ -173,6 +174,8 @@ export default function Contact() {
           </div>
         </div>
       </Section>
+
+      <ReviewsHomepage />
     </div>
   );
 }
