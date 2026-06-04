@@ -4,6 +4,7 @@ import { Button } from '../components/ui/Button';
 import { PhoneLink } from '../components/ui/PhoneLink';
 import { SITE } from '../lib/site';
 import { trackLeadSubmit } from '../lib/tracking';
+import { trackLead } from '../lib/fbq';
 
 type Status = 'idle' | 'submitting' | 'success' | 'error';
 
@@ -35,8 +36,10 @@ export default function Contact() {
       if (!res.ok || !data.ok) {
         throw new Error(data.error || `Server returned ${res.status}.`);
       }
-      // Confirmed server-side success only — fires the Google Ads lead conversion.
+      // Confirmed server-side success only — fires the Google Ads lead conversion
+      // and the Meta Pixel Lead event.
       trackLeadSubmit();
+      trackLead();
       setStatus('success');
       form.reset();
     } catch (err) {
