@@ -1,68 +1,114 @@
-import { ButtonLink } from '../ui/Button';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 
+/**
+ * Full-viewport hero with a looping background video.
+ *
+ * Drop the assets into /public:
+ *   - /hero.mp4         primary H.264 video (1920×1080)
+ *   - /hero2.mp4        fallback source
+ *   - /hero-poster.jpg  first frame, shown until the video can play
+ *
+ * Accessibility: respects prefers-reduced-motion (shows poster image
+ * instead of autoplaying video), and the video is aria-hidden so screen
+ * readers go straight to the headline.
+ */
 export function Hero() {
+  const [reduceMotion, setReduceMotion] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setReduceMotion(mq.matches);
+    const onChange = (e: MediaQueryListEvent) => setReduceMotion(e.matches);
+    mq.addEventListener?.('change', onChange);
+    return () => mq.removeEventListener?.('change', onChange);
+  }, []);
+
   return (
-    <section className="relative min-h-screen w-full overflow-hidden bg-ink text-textdark">
-      {/* Backdrop image placeholder — replace with /public/images/hero-dusk-house.jpg */}
-      <div className="absolute inset-0">
-        {/* PLACEHOLDER: Dusk shot of an installed home with permanent lighting on, warm
-            color tones, slight ambient glow. Aspect ratio 16:9 or wider, ~2400px wide.
-            Save to /public/images/hero-dusk-house.jpg and uncomment the <img>. */}
-        {/*
+    <section
+      aria-labelledby="hero-heading"
+      className="relative w-full overflow-hidden text-white bg-[#0B1F35] min-h-screen [min-height:100dvh]"
+    >
+      {/* Background media — fills viewport on every aspect ratio. */}
+      {reduceMotion ? (
         <img
-          src="/images/hero-dusk-house.jpg"
+          src="/hero-poster.jpg"
           alt=""
+          aria-hidden="true"
           className="absolute inset-0 w-full h-full object-cover"
-          loading="eager"
-          fetchPriority="high"
         />
-        */}
-        {/* Procedural fallback so the layout looks complete before the real photo lands */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_85%,#3a1f0e_0%,#1a0d06_45%,#000_85%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_92%,rgba(245,182,66,0.28)_0%,transparent_45%)]" />
-        <div
-          aria-hidden
-          className="absolute bottom-[10%] left-1/2 -translate-x-1/2 w-[80%] h-[8%] rounded-full blur-3xl opacity-60 bg-warmth/40"
-        />
-        {/* Top vignette for legibility */}
-        <div className="absolute inset-0 bg-gradient-to-b from-ink/80 via-ink/55 to-ink/95" />
-      </div>
-
-      <div className="relative container-x flex flex-col items-center text-center pt-40 pb-28 lg:pt-48 lg:pb-32 min-h-screen justify-center">
-        <p className="eyebrow text-warmth animate-fade-up" style={{ animationDelay: '60ms' }}>
-          {`Omaha's Certified EverLights Dealer`}
-        </p>
-
-        <h1
-          className="mt-6 text-[42px] leading-[1.05] sm:text-5xl lg:text-7xl font-extrabold tracking-tightish max-w-4xl text-balance animate-fade-up"
-          style={{ animationDelay: '160ms' }}
+      ) : (
+        <video
+          aria-hidden="true"
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="auto"
+          poster="/hero-poster.jpg"
+          className="absolute inset-0 w-full h-full object-cover"
         >
-          Permanent outdoor lighting.{' '}
-          <span className="block sm:inline">Installed once.</span>{' '}
-          <span className="animate-color-cycle inline-block">Controlled forever.</span>
-        </h1>
+          <source src="/hero.mp4" type="video/mp4" />
+          <source src="/hero2.mp4" type="video/mp4" />
+        </video>
+      )}
 
-        <p
-          className="mt-6 max-w-2xl text-base sm:text-lg lg:text-xl text-textdark/80 leading-relaxed animate-fade-up"
-          style={{ animationDelay: '260ms' }}
-        >
-          App-controlled, weather-proof, 16 million colors. Engineered in the USA.
-          Installed by a certified dealer in Omaha.
-        </p>
+      {/* Navy gradient overlay for headline legibility (55% top → 85% bottom). */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0"
+        style={{
+          background:
+            'linear-gradient(to bottom, rgba(11,31,53,0.55) 0%, rgba(11,31,53,0.85) 100%)',
+        }}
+      />
 
-        <div className="mt-10 flex flex-col items-center gap-3 animate-fade-up" style={{ animationDelay: '380ms' }}>
-          <ButtonLink to="/contact" variant="primary">
-            Get Your Free Quote →
-          </ButtonLink>
-          <p className="text-xs sm:text-sm text-textdark/55 mt-2">
-            Free design consultation · Written quote in 24 hours · No pressure
-          </p>
+      {/* Content layer. Vertically centered; left-aligned on desktop,
+          centered on mobile. */}
+      <div className="relative z-10 flex min-h-screen [min-height:100dvh] items-center">
+        <div className="container-x w-full">
+          <div className="max-w-3xl mx-auto lg:mx-0 text-center lg:text-left">
+            <p
+              className="text-xs sm:text-sm font-semibold uppercase tracking-eyebrow text-[#FFE39A]/90"
+              style={{ textShadow: '0 1px 8px rgba(0,0,0,0.5)' }}
+            >
+              Omaha's Certified EverLights Dealer
+            </p>
+
+            <h1
+              id="hero-heading"
+              className="mt-5 text-5xl md:text-7xl font-extrabold leading-[1.05] tracking-tightish text-balance"
+              style={{ textShadow: '0 2px 18px rgba(0,0,0,0.55)' }}
+            >
+              Permanent outdoor lighting. Installed once.{' '}
+              <span className="text-[#FFE39A]">Controlled forever.</span>
+            </h1>
+
+            <p
+              className="mt-6 text-lg md:text-xl text-white/85 max-w-2xl mx-auto lg:mx-0 leading-relaxed"
+              style={{ textShadow: '0 1px 8px rgba(0,0,0,0.5)' }}
+            >
+              App-controlled, weather-proof, 16 million colors. Engineered in
+              the USA. Installed by a certified dealer in Omaha.
+            </p>
+
+            <div className="mt-10 flex flex-col items-center lg:items-start gap-3">
+              <Link
+                to="/contact"
+                className="inline-flex items-center justify-center rounded-full px-10 py-5 text-base md:text-lg font-bold transition-colors duration-200 bg-[#00B8D9] text-[#0B1F35] hover:bg-[#00A0BD] active:bg-[#008CA8] shadow-[0_14px_44px_-12px_rgba(0,184,217,0.55)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#00B8D9]"
+              >
+                Get Your Free Quote →
+              </Link>
+              <p
+                className="mt-1 text-xs sm:text-sm text-white/65"
+                style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}
+              >
+                Free design consultation · Written quote in 24 hours · No pressure
+              </p>
+            </div>
+          </div>
         </div>
-      </div>
-
-      {/* subtle scroll cue */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-textdark/40 text-xs uppercase tracking-eyebrow hidden md:block">
-        Scroll
       </div>
     </section>
   );
