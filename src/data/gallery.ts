@@ -34,29 +34,29 @@ export type GalleryPhoto = {
 export const GALLERY: GalleryPhoto[] = [
   // --- Residential ---
   {
-    src: '/images/gallery/residential-01-porch.jpg',
+    src: '/images/gallery/residential-01-purple-yellow.jpg',
+    alt: 'Two-story stone-and-timber home at dusk with EverLights alternating warm yellow and rich purple along every roofline, moon rising in the sky',
+    category: 'residential',
+    aspect: '4/3',
+  },
+  {
+    src: '/images/gallery/residential-02-white.jpg',
+    alt: 'Craftsman-style home with stone accents at night, warm-white EverLights tracing every peak and eave',
+    category: 'residential',
+    aspect: '4/3',
+  },
+  {
+    src: '/images/gallery/residential-03-porch.jpg',
     alt: 'Warm-white and red accent lighting along the eaves of a craftsman-style home with stone columns and a covered porch at dusk',
     category: 'residential',
     aspect: '4/3',
     ownInstall: true,
   },
   {
-    src: '/images/gallery/residential-02-arch.jpg',
-    alt: 'Two-story stone and brick home with a timber entry arch, warm-white EverLights tracing the roofline at dusk with mountains in the background',
-    category: 'residential',
-    aspect: '1/1',
-  },
-  {
-    src: '/images/gallery/residential-03-red-blue.jpg',
-    alt: 'Multi-peak home lit with red and blue EverLights against a deep blue dusk sky',
+    src: '/images/gallery/residential-04-blue.jpg',
+    alt: 'Two-story stone-and-timber home at night with all-blue EverLights running across every roofline, moon visible in the sky',
     category: 'residential',
     aspect: '4/3',
-  },
-  {
-    src: '/images/gallery/residential-04-palms.jpg',
-    alt: 'Two-story stucco home framed by palm trees, with red and green EverLights along the roofline and balcony for the Christmas season',
-    category: 'residential',
-    aspect: '16/9',
   },
   {
     src: '/images/gallery/residential-05-christmas.jpg',
