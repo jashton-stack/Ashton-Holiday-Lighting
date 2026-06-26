@@ -60,7 +60,7 @@ export function Hero() {
         className="absolute inset-0"
         style={{
           background:
-            'linear-gradient(to bottom, rgba(11,31,53,0.55) 0%, rgba(11,31,53,0.85) 100%)',
+            'linear-gradient(to bottom, rgba(11,31,53,0.28) 0%, rgba(11,31,53,0.43) 100%)',
         }}
       />
 
