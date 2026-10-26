@@ -4,7 +4,7 @@ import { cn } from '../../lib/cn';
 import { GALLERY, type GalleryPhoto, type GalleryCategory } from '../../data/gallery';
 
 /**
- * Two horizontally-scrolling carousels (Residential, Commercial). Each slide
+ * Two horizontally-scrolling carousels (EverLights, Govee). Each slide
  * has a uniform 3:2 aspect ratio and is sized to fill most of the viewport
  * (capped at 1100px on large screens). Native CSS scroll-snap handles the
  * snapping; swipe works on touch, wheel/trackpad horizontal scroll works on
@@ -16,15 +16,15 @@ export function Gallery() {
       <div className="container-x">
         <SectionEyebrow tone="dark">Gallery</SectionEyebrow>
         <SectionHeading className="text-textdark">
-          What EverLights looks like, installed.
+          What permanent lighting looks like, installed.
         </SectionHeading>
         <SectionLead tone="dark">
-          Real examples of EverLights — on homes and on commercial buildings.
+          Real examples of the two systems we install — EverLights and Govee.
         </SectionLead>
       </div>
 
-      <CarouselGroup category="residential" title="Residential" className="mt-14 lg:mt-16" />
-      <CarouselGroup category="commercial"  title="Commercial"  className="mt-16 lg:mt-20" />
+      <CarouselGroup category="everlights" title="EverLights" className="mt-14 lg:mt-16" />
+      <CarouselGroup category="govee"      title="Govee"      className="mt-16 lg:mt-20" />
     </section>
   );
 }
@@ -39,7 +39,6 @@ function CarouselGroup({
   className?: string;
 }) {
   const photos = GALLERY.filter((p) => p.category === category);
-  if (photos.length === 0) return null;
 
   return (
     <div className={className}>
@@ -48,7 +47,18 @@ function CarouselGroup({
           {title}
         </h3>
       </div>
-      <ScrollCarousel photos={photos} categoryLabel={title} />
+      {photos.length > 0 ? (
+        <ScrollCarousel photos={photos} categoryLabel={title} />
+      ) : (
+        <div className="container-x mt-6">
+          <div
+            className="flex items-center justify-center rounded-2xl border border-white/10 bg-ink text-textdark/60 text-lg"
+            style={{ aspectRatio: '3 / 1' }}
+          >
+            Photos coming soon
+          </div>
+        </div>
+      )}
     </div>
   );
 }

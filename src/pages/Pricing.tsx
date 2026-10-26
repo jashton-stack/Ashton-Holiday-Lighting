@@ -1,7 +1,7 @@
 import { Section, SectionEyebrow, SectionHeading, SectionLead } from '../components/ui/Section';
 import { PricingTable } from '../components/ui/PricingTable';
 import { ButtonLink } from '../components/ui/Button';
-import { SITE } from '../lib/site';
+import { SITE, GOVEE_PRICING_TIERS, GOVEE_PRICING_NOTE } from '../lib/site';
 
 const AFFECTS = [
   { title: 'Linear footage', body: "The single biggest driver. Bigger roofline = more material, more LEDs, more time." },
@@ -37,8 +37,14 @@ export default function Pricing() {
             consultation.
           </SectionLead>
         </div>
-        <div className="mt-12">
-          <PricingTable tone="light" />
+        <h3 className="mt-12 text-2xl md:text-3xl font-bold tracking-tightish">EverLights</h3>
+        <div className="mt-6">
+          <PricingTable tone="light" showDisclaimer={false} />
+        </div>
+
+        <h3 className="mt-14 text-2xl md:text-3xl font-bold tracking-tightish">Govee</h3>
+        <div className="mt-6">
+          <PricingTable tone="light" tiers={GOVEE_PRICING_TIERS} note={GOVEE_PRICING_NOTE} />
         </div>
       </Section>
 
