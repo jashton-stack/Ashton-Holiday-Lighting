@@ -1,11 +1,8 @@
 /**
  * Photos shown in the homepage gallery section.
  *
- * IMPORTANT — provenance: almost every entry below is EverLights marketing
- * material, not Josiah's personal install work. The gallery showcases what
- * EverLights as a product looks like (EverLights + Govee), not a
- * personal portfolio. Copy on the page is intentionally framed that way.
- * See memory feedback_gallery_provenance.md.
+ * Provenance: every entry below is Josiah's own install work (EverLights
+ * and Govee).
  *
  * Adding a photo:
  *   1. Drop the optimized image into public/images/gallery/
@@ -38,12 +35,14 @@ export const GALLERY: GalleryPhoto[] = [
     alt: 'Two-story stone-and-timber home at dusk with EverLights alternating warm yellow and rich purple along every roofline, moon rising in the sky',
     category: 'everlights',
     aspect: '4/3',
+    ownInstall: true,
   },
   {
     src: '/images/gallery/residential-02-white.jpg',
     alt: 'Craftsman-style home with stone accents at night, warm-white EverLights tracing every peak and eave',
     category: 'everlights',
     aspect: '4/3',
+    ownInstall: true,
   },
   {
     src: '/images/gallery/residential-03-porch.jpg',
@@ -57,12 +56,14 @@ export const GALLERY: GalleryPhoto[] = [
     alt: 'Two-story stone-and-timber home at night with all-blue EverLights running across every roofline, moon visible in the sky',
     category: 'everlights',
     aspect: '4/3',
+    ownInstall: true,
   },
   {
-    src: '/images/gallery/residential-05-christmas.jpg',
-    alt: 'Modern flat-roof two-story home at dusk with EverLights running along every roofline in red, green, blue, and white for the Christmas season',
+    src: '/images/gallery/residential-06-warm-white-hillside.jpg',
+    alt: 'Two-story home on a grassy hillside at night with warm-white EverLights along every peak, eave, and the covered front porch',
     category: 'everlights',
-    aspect: '16/9',
+    aspect: '4/3',
+    ownInstall: true,
   },
 
   // --- Govee ---
