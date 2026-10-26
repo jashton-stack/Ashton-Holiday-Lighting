@@ -1,7 +1,18 @@
-import { PRICING_TIERS, PRICING_DISCLAIMER } from '../../lib/site';
+import { PRICING_TIERS, PRICING_DISCLAIMER, type PricingTier } from '../../lib/site';
 import { cn } from '../../lib/cn';
 
-export function PricingTable({ tone = 'dark' }: { tone?: 'light' | 'dark' }) {
+export function PricingTable({
+  tone = 'dark',
+  tiers = PRICING_TIERS,
+  note,
+  showDisclaimer = true,
+}: {
+  tone?: 'light' | 'dark';
+  tiers?: PricingTier[];
+  /** Optional line shown under the table, before the disclaimer. */
+  note?: string;
+  showDisclaimer?: boolean;
+}) {
   const isDark = tone === 'dark';
   return (
     <div className="w-full">
@@ -18,7 +29,7 @@ export function PricingTable({ tone = 'dark' }: { tone?: 'light' | 'dark' }) {
           <span className="text-right md:text-right">Starting price</span>
         </div>
         <ul className={cn('divide-y', isDark ? 'divide-white/10' : 'divide-black/10')}>
-          {PRICING_TIERS.map((tier) => (
+          {tiers.map((tier) => (
             <li
               key={tier.size}
               className={cn(
@@ -47,12 +58,19 @@ export function PricingTable({ tone = 'dark' }: { tone?: 'light' | 'dark' }) {
           ))}
         </ul>
       </div>
-      <p className={cn(
-        'mt-5 text-sm leading-relaxed max-w-3xl',
-        isDark ? 'text-textdark/70' : 'text-muted',
-      )}>
-        <em>{PRICING_DISCLAIMER}</em>
-      </p>
+      {note && (
+        <p className={cn('mt-4 text-sm font-semibold', isDark ? 'text-textdark/85' : 'text-bone-text')}>
+          {note}
+        </p>
+      )}
+      {showDisclaimer && (
+        <p className={cn(
+          'mt-5 text-sm leading-relaxed max-w-3xl',
+          isDark ? 'text-textdark/70' : 'text-muted',
+        )}>
+          <em>{PRICING_DISCLAIMER}</em>
+        </p>
+      )}
     </div>
   );
 }

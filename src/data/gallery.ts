@@ -3,7 +3,7 @@
  *
  * IMPORTANT — provenance: almost every entry below is EverLights marketing
  * material, not Josiah's personal install work. The gallery showcases what
- * EverLights as a product looks like (residential + commercial), not a
+ * EverLights as a product looks like (EverLights + Govee), not a
  * personal portfolio. Copy on the page is intentionally framed that way.
  * See memory feedback_gallery_provenance.md.
  *
@@ -17,7 +17,7 @@
  * zero entries, so the layout is visible while photos are being collected.
  */
 
-export type GalleryCategory = 'residential' | 'commercial';
+export type GalleryCategory = 'everlights' | 'govee';
 
 export type GalleryPhoto = {
   src: string;
@@ -32,61 +32,44 @@ export type GalleryPhoto = {
 };
 
 export const GALLERY: GalleryPhoto[] = [
-  // --- Residential ---
+  // --- EverLights ---
   {
     src: '/images/gallery/residential-01-purple-yellow.jpg',
     alt: 'Two-story stone-and-timber home at dusk with EverLights alternating warm yellow and rich purple along every roofline, moon rising in the sky',
-    category: 'residential',
+    category: 'everlights',
     aspect: '4/3',
   },
   {
     src: '/images/gallery/residential-02-white.jpg',
     alt: 'Craftsman-style home with stone accents at night, warm-white EverLights tracing every peak and eave',
-    category: 'residential',
+    category: 'everlights',
     aspect: '4/3',
   },
   {
     src: '/images/gallery/residential-03-porch.jpg',
     alt: 'Warm-white and red accent lighting along the eaves of a craftsman-style home with stone columns and a covered porch at dusk',
-    category: 'residential',
+    category: 'everlights',
     aspect: '4/3',
     ownInstall: true,
   },
   {
     src: '/images/gallery/residential-04-blue.jpg',
     alt: 'Two-story stone-and-timber home at night with all-blue EverLights running across every roofline, moon visible in the sky',
-    category: 'residential',
+    category: 'everlights',
     aspect: '4/3',
   },
   {
     src: '/images/gallery/residential-05-christmas.jpg',
     alt: 'Modern flat-roof two-story home at dusk with EverLights running along every roofline in red, green, blue, and white for the Christmas season',
-    category: 'residential',
+    category: 'everlights',
     aspect: '16/9',
   },
 
-  // --- Commercial ---
-  {
-    src: '/images/gallery/commercial-01-restaurant.jpg',
-    alt: 'A restaurant storefront at night with warm-white EverLights running cleanly along every roofline',
-    category: 'commercial',
-    aspect: '16/9',
-  },
-  {
-    src: '/images/gallery/commercial-02-carwash.jpg',
-    alt: 'A commercial car wash lit with red, white, and blue EverLights across its full façade and signage',
-    category: 'commercial',
-    aspect: '3/2',
-  },
-  {
-    src: '/images/gallery/commercial-03-plaza.jpg',
-    alt: 'A multi-level public plaza with green EverLights tracing the architectural beams and ceilings at night',
-    category: 'commercial',
-    aspect: '3/2',
-  },
+  // --- Govee ---
+  // Photos coming soon.
 ];
 
 export const PLACEHOLDER_COUNTS: Record<GalleryCategory, number> = {
-  residential: 5,
-  commercial: 3,
+  everlights: 5,
+  govee: 3,
 };
