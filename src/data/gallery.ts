@@ -66,7 +66,41 @@ export const GALLERY: GalleryPhoto[] = [
   },
 
   // --- Govee ---
-  // Photos coming soon.
+  {
+    src: '/images/gallery/govee-01-multicolor.jpg',
+    alt: 'Two-story home with a stone-front garage at dusk, Govee permanent lights in a rainbow gradient of red, orange, pink, purple, and blue along every roofline',
+    category: 'govee',
+    aspect: '4/3',
+    ownInstall: true,
+  },
+  {
+    src: '/images/gallery/govee-02-warm-white.jpg',
+    alt: 'Large two-story farmhouse-style home at twilight with warm-white Govee permanent lights along every eave, gable, and the covered front porch',
+    category: 'govee',
+    aspect: '4/3',
+    ownInstall: true,
+  },
+  {
+    src: '/images/gallery/govee-03-purple-orange.jpg',
+    alt: 'Two-story home at dusk lit with alternating purple and orange Govee permanent lights along the rooflines and down the side of the house',
+    category: 'govee',
+    aspect: '4/3',
+    ownInstall: true,
+  },
+  {
+    src: '/images/gallery/govee-04-green.jpg',
+    alt: 'Two-story home with a three-car garage at night, all-green Govee permanent lights tracing every peak and eave',
+    category: 'govee',
+    aspect: '4/3',
+    ownInstall: true,
+  },
+  {
+    src: '/images/gallery/govee-05-red-white.jpg',
+    alt: 'Modern multi-level home at night with red and white Govee permanent lights running along its rooflines',
+    category: 'govee',
+    aspect: '4/3',
+    ownInstall: true,
+  },
 ];
 
 export const PLACEHOLDER_COUNTS: Record<GalleryCategory, number> = {
