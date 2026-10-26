@@ -22,6 +22,15 @@ export default function Contact() {
     const payload = Object.fromEntries(formData.entries());
     (payload as Record<string, unknown>).source = 'quote_request';
 
+    // The system choice rides inside `notes` so the payload shape (and the
+    // Zapier zap reading it) stays unchanged.
+    const system = String(payload.system ?? '');
+    delete payload.system;
+    if (system) {
+      const notes = String(payload.notes ?? '').trim();
+      payload.notes = `Interested in: ${system}` + (notes ? `\n\n${notes}` : '');
+    }
+
     try {
       const res = await fetch('/.netlify/functions/submit-quote', {
         method: 'POST',
@@ -159,6 +168,12 @@ export default function Contact() {
                   label="When are you hoping to install?"
                   name="timing"
                   options={['1–3 weeks', '1–3 months', '3–6 months', 'Just exploring']}
+                />
+
+                <RadioGroup
+                  label="Which system are you interested in?"
+                  name="system"
+                  options={['EverLights', 'Govee', 'Not sure yet']}
                 />
 
                 <TextArea label="Anything else?" name="notes" rows={4} />
